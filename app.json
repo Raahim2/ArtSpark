@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "GenTube",
+    "slug": "GenTube",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/Images/logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/Images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true  
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/Images/logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.raahim2.GenTube"
+    },
+    "web": {
+      "favicon": "./assets/Images/logo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d4909823-8aff-4ee2-a990-47952cc0e21f"
+      }
+    }
+  }
+}
