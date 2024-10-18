@@ -222,7 +222,7 @@ export default function GenerateVideo() {
     // Step 6: Transcribe Audio
     setVideoStatus('Transcribing Audio...');
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const dummyFilePath = require('../assets/Videos/GeneratedVideo170653.mp4');
+    const dummyFilePath = require('../assets/Videos/GeneratedVideo133316.mp4');
     console.log('File path:', dummyFilePath);
     setVideoSource({ uri: dummyFilePath });
 
