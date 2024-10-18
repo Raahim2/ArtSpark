@@ -1,15 +1,28 @@
 import os
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HUGGING_FACE_API = os.getenv("HUGGING_FACE_API")
 
 def MistralChatBot(prompt):
-    api_url = "https://api-inference.huggingface.co/models/mistralai/mistral"
-    headers = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_KEY')}"}
+    api_url = "https://api-inference.huggingface.co/models/mistralai/Mistral-Small-Instruct-2409"
+    headers = {"Authorization": f"Bearer {HUGGING_FACE_API}"}
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 500,
+            "return_full_text": False
+        }
+    }
 
-    response = requests.post(api_url, headers=headers, json={"inputs": prompt})
+    response = requests.post(api_url, headers=headers, json=payload)
 
     if response.status_code == 200:
-        message = response.json()[0]['generated_text'].strip()
-        return message
+        result = response.json()
+        for message in result:
+            print(message['generated_text'], end="")
     else:
-        raise Exception(f"Failed to get response from Mistral AI: {response.status_code}, {response.text}")
+        raise Exception(f"Failed to generate text: {response.status_code}, {response.text}")
 
