@@ -25,8 +25,7 @@ def delete_existing_media(video_path , image_path):
         print(f"An error occurred while deleting media: {e}")
     
 
-
-def GenerateMedia(duration , oneword , video_path="VideoGenerationCode/Outputs/Videos",image_path="VideoGenerationCode/Outputs/Images" , data_path="VideoGenerationCode/Outputs/data.json"):
+def GenerateMedia(duration , oneword , video_path="D:/Raahim/Artificial Intellegence/GenTube/VideoGenerationCode/Outputs/Videos",image_path="D:/Raahim/Artificial Intellegence/GenTube/VideoGenerationCode/Outputs/Images" , data_path="D:/Raahim/Artificial Intellegence/GenTube/VideoGenerationCode/Outputs/data.json"):
     print("\nStep 2/5 - Generating Media\n") 
 
     with open(data_path, "r") as f:
@@ -75,6 +74,7 @@ def GenerateMedia(duration , oneword , video_path="VideoGenerationCode/Outputs/V
 
 
 
+# GenerateMedia(10 , "Burj Khalifa")
 
 
 # videos = get_pexels_videos(oneword,vid_count*2 , tolerance=0.2 )

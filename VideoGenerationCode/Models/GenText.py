@@ -21,8 +21,8 @@ def MistralChatBot(prompt):
 
     if response.status_code == 200:
         result = response.json()
-        for message in result:
-            print(message['generated_text'], end="")
+        output_message = "".join([message['generated_text'] for message in result])
+        return output_message
     else:
         raise Exception(f"Failed to generate text: {response.status_code}, {response.text}")
 

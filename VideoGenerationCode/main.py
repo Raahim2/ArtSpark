@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from VideoGeneration import InfoGenerator , MediaGeneration , ImageAnimation , CompileVideo , Subtitles , AudioTranscribtion
-from Models.GenImage import generate_image
+from Models.GenImage import generate_image , get_pexels_videos , download_video
 import json
 import os
 from PIL import Image
@@ -45,17 +45,19 @@ def generate_thumbnail():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/generateVideo/Step1', methods=['POST'])
+@app.route('/generateVideo/Step1', methods=['POST' , 'GET'])
 def generate_video_step1():
     # Video Infromation Generation
     try:
-        if request.is_json:
-            data = request.get_json()
-        else:
-            data = request.form.to_dict()
+        # if request.is_json:
+        #     data = request.get_json()
+        # else:
+        #     data = request.form.to_dict()
 
-        prompt = data.get('prompt', '')
-        duration = int(data.get('duration', 30))
+        # prompt = data.get('prompt', '')
+        # duration = int(data.get('duration', 30))
+        prompt = "Burj Khalifa History"
+        duration = 10
         print(f"Received prompt: {prompt}")
         print(f"Received duration: {duration}")
         
@@ -88,7 +90,7 @@ def generate_video_step2():
         image_path="VideoGenerationCode/Outputs/Images" 
 
         MediaGeneration.delete_existing_media(video_path , image_path)
-        MediaGeneration.GenerateMedia(duration , oneword)
+        MediaGeneration.GenerateMedia(duration , oneword , video_path , image_path)
         
         return jsonify({"oneword": oneword, "duration": duration , "Next": 'Animating Media'}), 200
 

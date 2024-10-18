@@ -6,14 +6,14 @@ load_dotenv()
 
 HUGGING_FACE_API = os.getenv("HUGGING_FACE_API")
 
-def GenAudio(text, output_path):
+def TextToSpeech(text, audio_path):
     api_url = "https://api-inference.huggingface.co/models/facebook/fastspeech2-en-ljspeech"
     headers = {"Authorization": f"Bearer {HUGGING_FACE_API}"}
 
     response = requests.post(api_url, headers=headers, json={"inputs": text})
 
     if response.status_code == 200:
-        with open(output_path, 'wb') as f:
+        with open(audio_path, 'wb') as f:
             f.write(response.content)  
     else:
         raise Exception(f"Failed to generate audio: {response.status_code}, {response.text}")
