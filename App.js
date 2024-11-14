@@ -7,7 +7,6 @@ import ProjectsScreen from './Screens/ProjectsScreen'
 import SettingsScreen from './Screens/SettingsScreen'
 import { ColorProvider } from './assets/Variables/colors'
 
-
 const Stack = createNativeStackNavigator();
 
 export default function App() {

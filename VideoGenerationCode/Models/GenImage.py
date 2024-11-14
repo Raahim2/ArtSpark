@@ -95,15 +95,14 @@ def get_pexels_videos(query, num_video, target_aspect_ratio=16/9, tolerance=0.1)
         'query': query,
         'per_page': num_video
     }
-    
     response = requests.get(endpoint, headers=headers, params=params)
-    
+
     if response.status_code == 200:
         data = response.json()
         videos = data.get('videos', [])
         
         if videos:
-            video_urls = []
+            video_info = []
             for video in videos:
                 width = video.get('video_files', [{}])[0].get('width')
                 height = video.get('video_files', [{}])[0].get('height')
@@ -111,10 +110,12 @@ def get_pexels_videos(query, num_video, target_aspect_ratio=16/9, tolerance=0.1)
                 if width and height:
                     aspect_ratio = width / height
                     if abs(aspect_ratio - target_aspect_ratio) < tolerance:
-                        video_urls.append(video['video_files'][0]['link'])
+                        video_url = video['video_files'][0]['link']
+                        duration = video.get('duration', 0)  # Get duration directly from video metadata
+                        video_info.append((video_url, duration))
             
-            if video_urls:
-                return video_urls
+            if video_info:
+                return video_info
             else:
                 print("No videos with the specified aspect ratio found.")
                 return []
@@ -122,22 +123,5 @@ def get_pexels_videos(query, num_video, target_aspect_ratio=16/9, tolerance=0.1)
             print("No videos found.")
             return []
     else:
-        print(f"Failed to retrieve videos. Status code: {response.status_code}")
+        print(f"Failed to retrieve videos. Status code: {response}")
         return []
-
-def download_video(url, filename):
-
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    
-    try:
-        response = requests.get(url, headers=headers, stream=True)
-        response.raise_for_status()  # Check if the request was successful
-        
-        with open(filename, 'wb') as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
-        print(f"Video downloaded successfully: {filename}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error downloading video: {e}")

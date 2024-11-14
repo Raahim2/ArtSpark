@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Button, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useColorContext } from '../assets/Variables/colors';
+import UploadBtn from './UploadVideo';
 
 export default function VideoInfo({ title, description }) {
   const [visibility, setVisibility] = useState('Private');
@@ -74,7 +75,7 @@ export default function VideoInfo({ title, description }) {
       {/* Next Button */}
       <View style={styles.buttonContainer}>
         {/* <Button title="Upload Video" onPress={UploadVideo} color={colors.theme} /> */}
-        {/* <UploadButton /> */}
+        <UploadBtn />
       </View>
     </View>
   );

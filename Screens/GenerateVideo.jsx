@@ -9,7 +9,6 @@ import Thumbnail from '../Components/Thumbnail';
 import VideoInfo from '../Components/VideoInfo';
 import VideoPlayer from '../Components/Video';
 import { useColorContext } from '../assets/Variables/colors';
-// import SnakeGame from '../Components/SnakeGame';
 
 export default function GenerateVideo() {
   const [colors] = useColorContext();
@@ -261,10 +260,6 @@ export default function GenerateVideo() {
           <View style={styles.imageContainer}>            
             <Animated.Image source={require('../assets/Images/logo.png')} style={[styles.image, rotatingStyle]} />
           </View>
-          {/* <Thumbnail isGenerating={true} />
-          <Thumbnail isGenerating={false} />
-          <VideoPlayer videoSource={{ uri: require('../assets/Videos/GeneratedVideo170653.mp4') }} /> */}
-
           </>      
         )}
         

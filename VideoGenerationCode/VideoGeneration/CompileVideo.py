@@ -1,116 +1,70 @@
-import ffmpeg
 import os
-import random
+import requests
+from moviepy.editor import VideoFileClip, concatenate_videoclips
+from Models.OnlineUpload import upload_video_to_cloudinary
+import tempfile
 
+def download_video(url):
+    """Download video from URL to a temporary file in /tmp."""
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4', dir='/tmp')
+    response = requests.get(url, stream=True)
+    with open(temp_file.name, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
+    return temp_file.name
 
-
-def is_valid_video(video):
-    """Check if the video file is valid."""
+def concatenate_videos(video_urls):
+    """Concatenate videos and upload to Cloudinary."""
+    temp_files = []
+    clips = []
+    
     try:
-        ffmpeg.probe(video)
-        return True
-    except ffmpeg.Error:
-        return False
+        # Download each video to temp file and prepare for concatenation
+        for url in video_urls:
+            temp_file = download_video(url)
+            temp_files.append(temp_file)
+            clip = VideoFileClip(temp_file)
+            clips.append(clip)
+        
+        # Create temporary output file in /tmp
+        output_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4', dir='/tmp')
+        
+        # Concatenate all video clips
+        final_clip = concatenate_videoclips(clips, method="compose")
+        final_clip.write_videofile(output_file.name)
+        
+        # Close clips before uploading to avoid file lock
+        for clip in clips:
+            clip.close()
+        final_clip.close()
+            
+        # Upload to Cloudinary
+        cloudinary_url = upload_video_to_cloudinary(output_file.name)
+        return cloudinary_url
 
-def concat_videos(video_list, output):
-    target_width = 1920
-    target_height = 1080
-    video_streams = []
-
-    print("\nProcessing videos:")
-
-    for video in video_list:
-        if is_valid_video(video):
+    finally:
+        # Clean up - remove temp files
+        for temp_file in temp_files:
             try:
-                # Create input stream and apply filters
-                video_stream = (
-                    ffmpeg.input(video)
-                    .filter('scale', target_width, target_height)
-                    .filter('fps', fps=24, round='up')  # Ensures uniform frame rate
-                    .filter('setsar', '1')  # Corrects pixel aspect ratio
-                )
-                video_streams.append(video_stream)
-                print(f"Added valid video: {video}")
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+            except Exception as e:
+                print(f"Error removing temp file: {e}")
+                
+        if 'output_file' in locals():
+            try:
+                if os.path.exists(output_file.name):
+                    os.remove(output_file.name)
+            except Exception as e:
+                print(f"Error removing output file: {e}")
 
-            except ffmpeg.Error as e:
-                print(f"Error processing video: {video}")
-                print(f"Error: {e}")
-        else:
-            print(f"Skipping invalid video: {video}")
-
-    if len(video_streams) < 2:
-        print("Not enough valid videos to concatenate.")
-        return
-    
-    print("\nConcatenating videos...")
-
+def process_videos(video_urls):
+    """Main function to process videos and return Cloudinary URL."""
     try:
-        concat_video = ffmpeg.concat(*video_streams, v=1, a=0)  # For now, disabling audio
-        concat_video.output(output).run()
-        print("Videos concatenated successfully!")
-
-    except ffmpeg.Error as e:
-        print("Error during concatenation:")
-        if e.stderr:
-            print(e.stderr.decode())
+        cloudinary_url = concatenate_videos(video_urls)
+        if cloudinary_url:
+            return {"success": True, "url": cloudinary_url}
         else:
-            print("No error output from ffmpeg.")
-    
-    print("Concatenation process completed.")
-
-def delete_existing_video(video_path):   
-    if os.path.exists(video_path):
-        os.remove(video_path)
-        print(f"Deleted existing video: {video_path}")
-
-def CompileVideo(output_path="VideoGenerationCode/Outputs/GeneratedVideo.mp4" , animated_path="VideoGenerationCode/Outputs/Animated" , video_path="VideoGenerationCode/Outputs/Videos"):
-    print("\nStep 4/5 - Compiling Video\n")
-    delete_existing_video(output_path)
-
-    animated_images_path = [animated_path+'/' + video for video in os.listdir(animated_path)]
-    videos_path = [video_path + '/' + video for video in os.listdir(video_path)]
-
-    video_content = videos_path + animated_images_path
-    random.shuffle(video_content)
-
-    print("Videos to be processed:")
-    print(video_content)
-
-
-    concat_videos(video_content, output_path )
-
-
-"""
-Alternate Method-------------------
-with open('videos.txt', 'w') as f:
-    for media in video_content:
-        f.write(f"file '{media}'\n")
-
-# Scaling and converting the videos to a common resolution (1920x1080)
-scaled_files = []
-for i, media in enumerate(video_content):
-    scaled_output = f"Outputs/SubVideos/Video{i+1}.mp4"
-    scaled_files.append(scaled_output)
-    subprocess.run([
-        'ffmpeg', '-i', media, 
-        '-vf', 'scale=1920:1080,setsar=1:1', 
-        '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast', 
-        scaled_output
-    ])
-
-
-with open('scaled_videos.txt', 'w') as f:
-    for scaled_media in os.listdir("Outputs/SubVideos"):
-        f.write(f"file 'Outputs/SubVideos/{scaled_media}'\n")
-
-subprocess.run([
-    'ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'scaled_videos.txt', 
-    '-c', 'copy', 'GeneratedVideo.mp4'
-])
-
-print("Videos Generated successfully into GeneratedVideo.mp4")
-
-
-os.remove('videos.txt')
-os.remove('scaled_videos.txt')
-"""
+            return {"success": False, "error": "Failed to upload to Cloudinary"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

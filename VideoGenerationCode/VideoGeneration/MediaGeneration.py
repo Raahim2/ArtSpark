@@ -1,80 +1,43 @@
 # python -m VideoGeneration.MediaGeneration  
-import json
-from Models.GenImage import  *
-import math
+from Models.GenImage import get_pexels_videos
 import random
-import os
-from moviepy.editor import VideoFileClip
 
-def delete_existing_media(video_path , image_path):
-    print(f"Deleting Existing Media in {video_path} and {image_path}")
-    print(os.path.exists(video_path))
-    
-        
-    try:
-        if os.path.exists(video_path):
-            for vid in os.listdir(video_path):
-                os.remove(video_path+'/' + vid)
-                print(f"Deleted {vid}")
 
-        if os.path.exists(image_path):
-            for im in os.listdir(image_path):
-                os.remove(image_path+'/' + im)
-                print(f"Deleted {im}")
-    except Exception as e:
-        print(f"An error occurred while deleting media: {e}")
-    
-
-def GenerateMedia(duration , oneword , video_path="D:/Raahim/Artificial Intellegence/GenTube/VideoGenerationCode/Outputs/Videos",image_path="D:/Raahim/Artificial Intellegence/GenTube/VideoGenerationCode/Outputs/Images" , data_path="D:/Raahim/Artificial Intellegence/GenTube/VideoGenerationCode/Outputs/data.json"):
+def GenerateMedia(duration , oneword ):
     print("\nStep 2/5 - Generating Media\n") 
 
-    with open(data_path, "r") as f:
-        data = json.load(f)
+    print(f"Video Duration {duration} Seconds")
+    print(f"One Word {oneword}")
 
-    print(f"FinalVideo Duration {duration} Seconds")
-
-    vid_duration=math.ceil((2/3)*duration)
-    im_duration=math.ceil((1/3)*duration)
-
-    print(f"Video Duration {vid_duration} Seconds")
-    print(f"Image Duration {im_duration} Seconds")
-
-
-    videos = get_pexels_videos(oneword,25 , tolerance=0.5 )
-    images = get_pexels_images(oneword,50 ,tolerance=0.5)
-
+    video_data = get_pexels_videos(oneword, 25, tolerance=0.5)
+    videos = [video[0] for video in video_data]  # Extract video URLs
+    durations = [video[1] for video in video_data] 
 
     print(f"Videos Found {len(videos)}")
-    print(f"Images Found {len(images)}")
+    print(f"Durations Found {durations}")
+
 
     vid_count = 1
-    im_count = 1
+    video_urls = []
 
     while(duration > 0):
         video_url = random.choice(videos)
+        print(f"Video URL {video_url}")
 
         print(f"Genearting Video {vid_count}")
-        download_video(video_url, f"{video_path}/Video{vid_count}.mp4")
+        video_urls.append(video_url)
         videos.remove(video_url)
 
-        clip = VideoFileClip(f"{video_path}/Video{vid_count}.mp4")
-        clip_duration = math.ceil(clip.duration)
-        duration = duration - clip_duration
+        duration = duration - durations[vid_count-1]
         vid_count = vid_count +1 
 
+    return video_urls
 
-    while(im_count < vid_count):
-        image_url = random.choice(images)
-
-        print(f"Genearting Image {im_count}")
-        download_image(image_url , f"{image_path}/Image{im_count}.png")
-        images.remove(image_url)
-
-        im_count = im_count + 1 
+        
 
 
 
-# GenerateMedia(10 , "Burj Khalifa")
+
 
 
 # videos = get_pexels_videos(oneword,vid_count*2 , tolerance=0.2 )

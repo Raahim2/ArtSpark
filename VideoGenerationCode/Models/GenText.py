@@ -1,28 +1,42 @@
-import os
 import requests
-from dotenv import load_dotenv
+import json
+import os
+import dotenv
 
-load_dotenv()
+dotenv.load_dotenv()
 
-HUGGING_FACE_API = os.getenv("HUGGING_FACE_API")
+def Gemini(prompt):
+    # Set up the API endpoint and your API key
+    API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
+    API_KEY = os.getenv("GEMINI_API_KEY")  # Replace with your actual API key
 
-def MistralChatBot(prompt):
-    api_url = "https://api-inference.huggingface.co/models/mistralai/Mistral-Small-Instruct-2409"
-    headers = {"Authorization": f"Bearer {HUGGING_FACE_API}"}
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 500,
-            "return_full_text": False
-        }
+    # Set up headers
+    headers = {
+        "Content-Type": "application/json"
     }
 
-    response = requests.post(api_url, headers=headers, json=payload)
+    # Create the payload according to the curl command structure
+    data = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ]
+    }
 
+    # Make the POST request to the API
+    response = requests.post(f"{API_ENDPOINT}?key={API_KEY}", headers=headers, json=data)
+
+    # Check for successful response
     if response.status_code == 200:
         result = response.json()
-        output_message = "".join([message['generated_text'] for message in result])
-        return output_message
+        # Extract the text part from the response
+        output_text = result['candidates'][0]['content']['parts'][0]['text']
+        return output_text
     else:
-        raise Exception(f"Failed to generate text: {response.status_code}, {response.text}")
+        return f"Error: {response.status_code} - {response.text}"
 
