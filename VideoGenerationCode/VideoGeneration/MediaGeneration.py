@@ -1,6 +1,8 @@
 # python -m VideoGeneration.MediaGeneration  
-from Models.GenImage import get_pexels_videos
+from Models.GenImage import get_pexels_videos , generate_image
+from Models.OnlineUpload import upload_image_to_cloudinary
 import random
+import tempfile
 
 
 def GenerateMedia(duration , oneword ):
@@ -33,7 +35,18 @@ def GenerateMedia(duration , oneword ):
 
     return video_urls
 
-        
+
+def GenerateThumbnail(prompt):
+    print(f"Generating Thumbnail for {prompt}")
+
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+        output_path = temp_file.name
+        generate_image(prompt, output_path)
+
+    thumbnail_url = upload_image_to_cloudinary(output_path)
+
+    print(f"Thumbnail URL: {thumbnail_url}")
+    return thumbnail_url
 
 
 

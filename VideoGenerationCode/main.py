@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from flask import Flask, jsonify
+from flask import Flask, jsonify , request
 from VideoGeneration import InfoGenerator  , MediaGeneration , CompileVideo , Subtitles
 import os
 import uuid
@@ -8,34 +8,92 @@ import datetime
 mongo_uri = os.getenv("MONGO_URI")
 client = MongoClient(mongo_uri)
 db = client["GenTube"]  
+gentube_api_key = os.getenv("GENTUBE_API_KEY")
 
-current_project_id = "d6fd1126-d070-4570-b079-30e61883a9d2"
 
 app = Flask(__name__)
 
-@app.route('/' , methods=['GET'])
+@app.route('/' , methods=['GET' , 'POST'])
 def index():
-    return jsonify({"message": f"Welcome to the Video Generation API Working on project {current_project_id}"})
+    return jsonify({"message": f"Welcome to the Video Generation API"})
     
-@app.route('/deleteAllData', methods=['GET'])
+@app.route('/deleteAllData', methods=['POST'])
 def delete_all_data():
+    if(request==None or request.get_json()==None):
+        return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
+        
+    print(request)
     try:
-        collection = db["Projects"]
-        result = collection.delete_many({})
-        if result.deleted_count > 0:
-            return jsonify({"message": f"Successfully deleted {result.deleted_count} documents."}), 200
+        provided_api_key = request.headers.get("Authorization")
+
+        if provided_api_key == gentube_api_key:
+            collection = db["Projects"]
+            result = collection.delete_many({})
+            if result.deleted_count > 0:
+                return jsonify({"message": f"Successfully deleted {result.deleted_count} documents."}), 200
+            else:
+                return jsonify({"message": "No documents found to delete."}), 200
         else:
-            return jsonify({"message": "No documents found to delete."}), 200
+            return jsonify({"message": "You don't have access."}), 403
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/generateVideo/Step1', methods=['POST' , 'GET'])
+
+@app.route('/generateThumbnail', methods=['POST'])
+def generate_thumbnail():
+    if request is None or request.get_json() is None:
+        return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
+        
+    provided_api_key = request.headers.get("Authorization")
+
+    if provided_api_key != gentube_api_key:
+        return jsonify({"message": "Invalid API Key"}), 403
+    
+    try:
+        request_data = request.get_json()
+        project_id = request_data.get("project_id")
+        collection = db["Projects"]
+        project = collection.find_one({"project_id": project_id})
+        if not project:
+            return jsonify({"error": "Project not found"}), 404
+        
+        title = project.get("title")
+        
+        # Generate the thumbnail using the title as the prompt
+        thumbnail_url = MediaGeneration.GenerateThumbnail(title)
+        
+        # Update the project with the thumbnail URL
+        collection.update_one(
+            {"project_id": project_id},
+            {"$set": {"thumbnail_url": thumbnail_url}}
+        )
+        
+        return jsonify({"message": "Thumbnail generated successfully", "thumbnail_url": thumbnail_url}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+ 
+
+
+@app.route('/generateVideo/Step1', methods=['POST'])
 def generate_video_step1():
     # Video Information Generation
     collection = db["Projects"]
     try:
-        prompt = "Mount Everest"
-        duration = 60
+        if request.content_type != 'application/json':
+            return jsonify({"error": "415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'."}), 415
+
+        if request is None or request.get_json() is None:
+            return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
+        
+        provided_api_key = request.headers.get("Authorization")
+
+        if provided_api_key != gentube_api_key:
+            return jsonify({"message": "Invalid API Key"}), 403
+
+        request_data = request.get_json()
+        prompt = request_data.get("prompt", "Default Prompt")
+        duration = request_data.get("duration", 20)
         print(f"Received prompt: {prompt}")
         print(f"Received duration: {duration}")
         
@@ -45,7 +103,6 @@ def generate_video_step1():
         creation_date = datetime.datetime.now().isoformat()
         title = data.get("Video Title")
         description = data.get("Video Description")
-        duration = duration
         oneword = data.get("OneWord")
        
         video_info = {
@@ -70,12 +127,21 @@ def generate_video_step1():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/generateVideo/Step2', methods=['GET'])
+@app.route('/generateVideo/Step2', methods=['POST'])
 def generate_video_step2():
+    if(request==None or request.get_json()==None):
+        return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
+        
+    provided_api_key = request.headers.get("Authorization")
+
+    if provided_api_key != gentube_api_key:
+        return jsonify({"message": "Invalid API Key"}), 403
+
     # Video Media Generation
     print("Generating Media")
     try:
-        project_id = current_project_id
+        request_data = request.get_json()
+        project_id = request_data.get("project_id")
         collection = db["Projects"]
         project = collection.find_one({"project_id": project_id})
 
@@ -95,11 +161,21 @@ def generate_video_step2():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/generateVideo/Step3', methods=['GET'])
+@app.route('/generateVideo/Step3', methods=['POST'])
 def generate_video_step3():
+    if(request==None or request.get_json()==None):
+        return jsonify({"message": "You don't have access."}), 400
+        
+    print(request)
+    provided_api_key = request.headers.get("Authorization")
+
+    if provided_api_key != gentube_api_key:
+        return jsonify({"message": "You don't have access."}), 403
+    
     print("Compiling Video")
     try:
-        project_id = current_project_id
+        request_data = request.get_json()
+        project_id = request_data.get("project_id")
         collection = db["Projects"]
         project = collection.find_one({"project_id": project_id})
 
@@ -119,11 +195,21 @@ def generate_video_step3():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/generateVideo/Step4', methods=['GET'])
+@app.route('/generateVideo/Step4', methods=['POST'])
 def generate_video_step4():
+    if(request==None or request.get_json()==None):
+        return jsonify({"message": "You don't have access."}), 400
+        
+    print(request)
+    provided_api_key = request.headers.get("Authorization")
+
+    if provided_api_key != gentube_api_key:
+        return jsonify({"message": "You don't have access."}), 403
+    
     print("Giving Subtitles")
 
-    project_id = current_project_id
+    request_data = request.get_json()
+    project_id = request_data.get("project_id")
     collection = db["Projects"]
     project = collection.find_one({"project_id": project_id})
     video_url = project.get("compiled_url")
@@ -141,7 +227,6 @@ def generate_video_step4():
     return jsonify({f"final_video_url": final_video_url}), 200
 
    
-
 
 if __name__ == "__main__":
     app.run(debug=True)

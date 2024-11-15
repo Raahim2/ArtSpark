@@ -49,3 +49,22 @@ def upload_audio_to_cloudinary(audio_path):
         print("An error occurred during Cloudinary upload:", e)
         return None
 
+def upload_image_to_cloudinary(image_path):
+    """
+    Uploads an image file to Cloudinary.
+
+    Parameters:
+        image_path (str): The path to the image file to be uploaded.
+
+    Returns:
+        str: A link to the uploaded image if successful, otherwise an error message.
+    """
+    try:
+        response = cloudinary.uploader.upload(image_path, resource_type="image")
+        image_url = response.get("url")
+        print(f"Uploaded image link: {image_url}")
+        return image_url
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
