@@ -3,14 +3,14 @@ import { View, Image, StyleSheet } from 'react-native';
 import Status from './Status';
 import { useColorContext } from '../assets/Variables/colors';
 
-export default function Thumbnail({ isGenerating }) {
+export default function Thumbnail({ isGenerating, thumbnailUrl }) {
   const [colors] = useColorContext();
   const styles = createStyles(colors);
 
   return (
     <View style={styles.thumbnailContainer}>
       <Image
-        source={isGenerating ? { uri: 'https://via.placeholder.com/400x300/FFFFFF/FFFFFF' } : require('../assets/Images/thumbnail.png')}
+        source={isGenerating ? { uri: 'https://via.placeholder.com/400x300/FFFFFF/FFFFFF' } : { uri: thumbnailUrl }}
         style={styles.thumbnail}
       />
       {isGenerating && (

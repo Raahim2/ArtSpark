@@ -1,5 +1,6 @@
 import React, { useState, useRef  , useEffect } from 'react'
 import { View, Text, StyleSheet, ScrollView, Animated, Alert, Image } from 'react-native';
+
 import BottomNavigation from '../Components/BottomNavigation';
 import UpperNavigation from '../Components/UpperNavigation';
 import SideBar from '../Components/SideBar';
@@ -8,9 +9,20 @@ import ProgressBar from '../Components/ProgressBar';
 import Thumbnail from '../Components/Thumbnail';
 import VideoInfo from '../Components/VideoInfo';
 import VideoPlayer from '../Components/Video';
+
+import generateInfo from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/InfoGenerator';
+import generateThumbnail from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/ThumbnailGenerator';
+import getPexelsVideos from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/MediaGeneration';
+import ConcatVideos from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/Concatination';
+
+
 import { useColorContext } from '../assets/Variables/colors';
+import { GENTUBE_API_KEY } from '@env'
+
 
 export default function GenerateVideo() {
+
+  
   const [colors] = useColorContext();
   const styles = createStyles(colors);
   const [duration, setDuration] = useState(200);
@@ -18,10 +30,12 @@ export default function GenerateVideo() {
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
   const [videoData, setVideoData] = useState(null);
   const [isThumbnailGenerated, setIsThumbnailGenerated] = useState(false);
+  const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const [videoStatus, setVideoStatus] = useState("Generating Video...");
   const [videoSource, setVideoSource] = useState(null);
   const rotation = useRef(new Animated.Value(0)).current;
-
+  const apiUrl = "https://api-for-test.vercel.app/";
+  
 
   const toggleSidebar = () => {
     const toValue = isSidebarOpen ? 0 : 1;
@@ -58,133 +72,146 @@ export default function GenerateVideo() {
   };
 
 
-
   const generateVideo = async (prompt) => {
-    Alert.alert('Notice', 'Video generation started', [{ text: 'OK' }]);
-    setIsThumbnailGenerated(false);
-    setDuration(200);
-    // Step 1: Generate Video Information
-    setVideoStatus('Generating Video ...');
+    console.log("Before Generating Video");
+    // const videoData = await generateVideoInfo(prompt);
+    // const videoId = await uploadVideoData(videoData.title, videoData.description, videoData.duration, videoData.oneWord, videoData.createdAt);
+    
+    // setVideoStatus('Generating Thumbnail...');
+    // const thumbnailUrl = await generateThumbnail(videoData.title);
+    // console.log("Thumbnail URL:", thumbnailUrl);
+
+    // setIsThumbnailGenerated(true);
+    // setThumbnailUrl(thumbnailUrl);
+
+    // const addThumbnail = await updateCollection(videoId, "thumbnail_url", thumbnailUrl)
+    // console.log("\n\n"+addThumbnail.message); 
+
+    // const urls = await getPexelsVideos(videoData.oneWord, videoData.duration);
+    // const urls = await getPexelsVideos("Waterfall", 20);
+    // console.log(urls);
+
+    urls = ["https://videos.pexels.com/video-files/3173312/3173312-hd_1920_1080_30fps.mp4", "https://videos.pexels.com/video-files/3173313/3173313-uhd_2560_1440_30fps.mp4"]
+
+    // const addUrls = await updateCollection(videoId, "video_urls", urls)
+    // console.log("\n\n"+addUrls.message);
+    ConcatVideos(urls, "../../assets/Videos/concat.mp4");
+
+
+
+
+
+    
+    console.log("After Video Generation");
+  };
+
+  const generateVideoInfo = async (prompt) => {j
+    console.log("Prompt:", prompt);
+    const initialVideoData = {
+      title: "Generating...",
+      description: "Generating...",
+      id: null,
+    };
+    setVideoData(initialVideoData);
+    setVideoStatus('Generating Video Information...');
+
     try {
-      const response = await fetch('http://192.168.0.103:5000/generateVideo/Step1', {
+      const videoInfo = await generateInfo(prompt, 10); 
+      const newVideoData = {
+        prompt: prompt,
+        title: videoInfo["Video Title"],
+        description: videoInfo["Video Description"],
+        duration: videoInfo["Video Duration"],
+        oneWord: videoInfo["OneWord"],
+        createdAt: new Date().toLocaleDateString('en-GB'),
+      };
+      setVideoData(newVideoData);
+      setVideoStatus('Video Information Generated Successfully');
+      return newVideoData;
+    } catch (error) {
+      console.error('Error generating video information:', error);
+      setVideoStatus('Error generating video information');
+    }
+
+  }
+
+  const uploadVideoData = async (title, description, duration, oneWord, createdAt) => {
+    console.log("Uploading Video Data...\n\n");
+    setVideoStatus('Uploading Video Data...');
+
+    try {
+      const response = await fetch(`${apiUrl}uploadData`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': GENTUBE_API_KEY,
         },
-        body: JSON.stringify({ prompt, duration: 10 }),
+        body: JSON.stringify({
+          title: title,
+          description: description,
+          duration: duration,
+          oneWord: oneWord,
+          createdAt: createdAt,
+        }),
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        setVideoData({
-          title: data.title,
-          description: data.description,
-        });
-      } 
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        console.error('Error uploading video data:', errorMessage);
+        setVideoStatus('Error uploading video data');
+        return;
+      }
+
+      const responseData = await response.json();
+      console.log('Project ID:', responseData.project_id);
+      setVideoStatus('Video Data Uploaded Successfully');
+      return responseData.project_id;
+
     } catch (error) {
-      console.log(error);
+      console.error('An error occurred while uploading video data:', error.toString());
+      setVideoStatus('Error uploading video data');
     }
-
-    setVideoStatus('Generating Thumbnail ...');
-    // Generate Thumbnail
-    try {
-      const imageResponse = await fetch('http://192.168.0.103:5000/generateThumbnail', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const imageData = await imageResponse.json();
-      if (imageResponse.ok) {
-        Alert.alert('Success', 'Image generated successfully', [{ text: 'OK' }]);
-        setIsThumbnailGenerated(true);
-      } 
-    } catch (error) {
-      console.log(error);
-    }
-
-    setIsThumbnailGenerated(true);
-
-
-    // Step 2: Generate Media
-    setVideoStatus('Generating Media...');
-    try {
-      const mediaResponse = await fetch('http://192.168.0.103:5000/generateVideo/Step2', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (error) {
-      console.log(error);
-    }
-
-
-    // Step 3: Animate Media
-
-    setVideoStatus('Animating Media...');
-    try {
-      const animateResponse = await fetch('http://192.168.0.103:5000/generateVideo/Step3', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (error) {
-      console.log(error);
-    }
-
-    // Step 4: Compile Video
-    setVideoStatus('Compiling Video...');
-    try {
-      const compileResponse = await fetch('http://192.168.0.103:5000/generateVideo/Step4', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (error) {
-      console.log(error);
-    }
-
-    // Step 5: Generate Subtitles
-    setVideoStatus('Generating Subtitles...');
-    try {
-      const subtitleResponse = await fetch('http://192.168.0.103:5000/generateVideo/Step5', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (error) {
-      console.log(error);
-    }
-
-    // Step 6: Transcribe Audio
-    setVideoStatus('Transcribing Audio...');
-    try {
-      const transcribeResponse = await fetch('http://192.168.0.103:5000/generateVideo/Step6', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const transcribeData = await transcribeResponse.json();
-      const filePath = transcribeData.file_path;
-      console.log('File path:', filePath);
-      setVideoSource({ uri: filePath });
-
-     
-    } catch (error) {
-      console.log(error);
-    }
-    setVideoStatus('Video Generation Completed!');
-    Alert.alert('Success', 'Video generation completed', [{ text: 'OK' }]);
-
   };
 
+  const updateCollection = async (projectId, key, value) => {
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': GENTUBE_API_KEY,
+    };
+
+    const payload = {
+      project_id: projectId,
+      key: key,
+      value: value,
+    };
+
+    try {
+      const response = await fetch(`${apiUrl}updateCollection`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        console.error("Error updating collection:", errorMessage);
+        return null;
+      }
+
+      const responseData = await response.json();
+      return responseData;
+
+    } catch (error) {
+      console.error("An error occurred:", error.toString());
+      return null;
+    }
+  };
+
+  
+  
+
+ 
   const dummyGenerateVideo = async (prompt) => {
     setVideoStatus('Initializing...');
     setVideoSource(null);
@@ -221,13 +248,17 @@ export default function GenerateVideo() {
     // Step 6: Transcribe Audio
     setVideoStatus('Transcribing Audio...');
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const dummyFilePath = require('../assets/Videos/GeneratedVideo133316.mp4');
+    const dummyFilePath = require('../assets/Videos/concat.mp4');
     console.log('File path:', dummyFilePath);
     setVideoSource({ uri: dummyFilePath });
 
     setVideoStatus('Video Generation Completed!');
     Alert.alert('Success', 'Video generation completed', [{ text: 'OK' }]);
   };
+
+
+
+
 
 
   return (
@@ -243,7 +274,7 @@ export default function GenerateVideo() {
             {videoSource ? (
               <VideoPlayer videoSource={videoSource} />
             ) : (
-              <Thumbnail isGenerating={!isThumbnailGenerated} />
+              <Thumbnail isGenerating={!isThumbnailGenerated} thumbnailUrl={thumbnailUrl} />
             )}
             <VideoInfo 
               title={videoData.title}
@@ -266,8 +297,13 @@ export default function GenerateVideo() {
       </ScrollView>
 
       <View style={styles.promptContainer}>
-        {/* <PromptInput onSend={(prompt) => generateVideo(prompt)} /> */}
-        <PromptInput onSend={(prompt) => dummyGenerateVideo(prompt)} />
+        <PromptInput onSend={(prompt) => generateVideo(prompt)} />
+        {/* <PromptInput onSend={uploadVideoData} /> */}
+
+        
+
+
+        {/* <PromptInput onSend={(prompt) => dummyGenerateVideo(prompt)} /> */}
       </View>
 
       <BottomNavigation />

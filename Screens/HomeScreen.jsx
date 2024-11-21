@@ -54,7 +54,7 @@ export default function HomeScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {Array(3).fill().map((_, index) => (
                 <View key={index} style={styles.videoContainer}>
-                  <VideoPlayer videoSource={{ uri: require('../assets/Videos/GeneratedVideo133316.mp4') }} style={styles.video} />
+                  <VideoPlayer videoSource={{ uri: require('../assets/Videos/concat.mp4') }} style={styles.video} />
                 </View>
               ))}
 
