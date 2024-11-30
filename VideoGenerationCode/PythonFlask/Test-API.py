@@ -162,7 +162,6 @@ def update_collection(project_id, key, value):
         print("An error occurred:", str(e))
         return None
 
-
 def concat_videos(project_id):
     api_url = "http://api-for-test.vercel.app/concatVideos"
     api_key = os.getenv("GENTUBE_API_KEY")  # Ensure your environment variable is set or replace with your actual API key
@@ -228,20 +227,20 @@ def check_task_status(task_id):
         return None
 
 
+
 import requests
 import time
 
-# URL of the deployed Flask app on Vercel
-base_url = "https://api-for-test.vercel.app"
+base_url = "https://api-for-test.vercel.app/VideoEditing"
 
-# Video URLs (Pexels video URLs or valid video file URLs)
-video1_url = "https://videos.pexels.com/video-files/3173312/3173312-hd_1920_1080_30fps.mp4"
-video2_url = "https://videos.pexels.com/video-files/3173313/3173313-uhd_2560_1440_30fps.mp4"
+video_urls = [
+    "https://videos.pexels.com/video-files/3173312/3173312-hd_1920_1080_30fps.mp4",
+    "https://videos.pexels.com/video-files/3173313/3173313-uhd_2560_1440_30fps.mp4"
+]
 
 
 data = {
-    'video1_url': video1_url,
-    'video2_url': video2_url
+    'video_urls': video_urls  # Passing the list of video URLs
 }
 
 response = requests.post(f"{base_url}/concat_videos", json=data)
@@ -254,17 +253,16 @@ if response.status_code == 202:
     # Step 2: Poll the /get_video endpoint until the video is ready
     video_ready = False
     while not video_ready:
-        time.sleep(5)  # Wait 5 seconds before checking again
+        time.sleep(10)  # Wait 10 seconds before checking again
         
         # Step 3: Check the result by calling the /get_video endpoint
         result_response = requests.get(f"{base_url}/get_video?job_id={job_id}")
         
         if result_response.status_code == 200:
-            # Save the resulting video
-            with open("concatenated_video.mp4", "wb") as f:
-                f.write(result_response.content)
-            print("Video saved successfully.")
-            video_ready = True  # Exit the loop after saving the video
+            # Print the resulting video URL from Cloudinary
+            video_url = result_response.json().get("output_path")
+            print(f"Video is ready! Whoop Whoop Cloudinary URL: {video_url}")
+            video_ready = True  # Exit the loop after receiving the video URL
         elif result_response.status_code == 404:
             print("Video not ready yet, retrying...")
         else:

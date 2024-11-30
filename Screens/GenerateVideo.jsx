@@ -13,7 +13,8 @@ import VideoPlayer from '../Components/Video';
 import generateInfo from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/InfoGenerator';
 import generateThumbnail from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/ThumbnailGenerator';
 import getPexelsVideos from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/MediaGeneration';
-import ConcatVideos from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/Concatination';
+import concatVideos from '../VideoGenerationCode/JavaScriptReact/Models/Concat';
+import generateAudio from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/AudioGenerator';
 
 
 import { useColorContext } from '../assets/Variables/colors';
@@ -74,38 +75,52 @@ export default function GenerateVideo() {
 
   const generateVideo = async (prompt) => {
     console.log("Before Generating Video");
-    // const videoData = await generateVideoInfo(prompt);
-    // const videoId = await uploadVideoData(videoData.title, videoData.description, videoData.duration, videoData.oneWord, videoData.createdAt);
+    setVideoStatus('Initializing...');  
+    setVideoSource(null);
+    setIsThumbnailGenerated(false);
+    setThumbnailUrl(null);
+
+    const videoData = await generateVideoInfo(prompt);
+    console.log("Video Data:", videoData);
+    const videoId = await uploadVideoData(videoData.title, videoData.description, videoData.duration, videoData.oneWord, videoData.createdAt);
     
-    // setVideoStatus('Generating Thumbnail...');
+    setVideoStatus('Generating Thumbnail...');
     // const thumbnailUrl = await generateThumbnail(videoData.title);
-    // console.log("Thumbnail URL:", thumbnailUrl);
+    const thumbnailUrl = "https://via.placeholder.com/400x300/FFY6SF/FF9JK";
+    console.log("Thumbnail URL:", thumbnailUrl);
 
-    // setIsThumbnailGenerated(true);
-    // setThumbnailUrl(thumbnailUrl);
+    setIsThumbnailGenerated(true);
+    setThumbnailUrl(thumbnailUrl);
 
-    // const addThumbnail = await updateCollection(videoId, "thumbnail_url", thumbnailUrl)
-    // console.log("\n\n"+addThumbnail.message); 
+    const addThumbnail = await updateCollection(videoId, "thumbnail_url", thumbnailUrl)
+    console.log("\n\n"+addThumbnail.message); 
 
-    // const urls = await getPexelsVideos(videoData.oneWord, videoData.duration);
-    // const urls = await getPexelsVideos("Waterfall", 20);
-    // console.log(urls);
+    setVideoStatus('Generating Videos...');
+    const urls = await getPexelsVideos(videoData.oneWord.trim(), videoData.duration);
+    console.log("Videos:", urls);
+    const addUrls = await updateCollection(videoId, "video_urls", urls)
+    console.log("\n\n"+addUrls.message);
 
-    urls = ["https://videos.pexels.com/video-files/3173312/3173312-hd_1920_1080_30fps.mp4", "https://videos.pexels.com/video-files/3173313/3173313-uhd_2560_1440_30fps.mp4"]
+    setVideoStatus('Compiling Videos...');
+    const finalVideoUrl = await concatVideos(urls);
+    console.log(finalVideoUrl);
 
-    // const addUrls = await updateCollection(videoId, "video_urls", urls)
-    // console.log("\n\n"+addUrls.message);
-    ConcatVideos(urls, "../../assets/Videos/concat.mp4");
+    const addFinalVideoUrl = await updateCollection(videoId, "video_urls", finalVideoUrl)
+    console.log("\n\n"+addFinalVideoUrl.message);
 
-
-
-
+    setVideoSource(finalVideoUrl);
+    setVideoStatus('Video Generation Completed!');
 
     
     console.log("After Video Generation");
   };
 
-  const generateVideoInfo = async (prompt) => {j
+  const generateAudioNative = async (prompt) => {
+    const audioUrl = await generateAudio(prompt);
+    console.log("Audio URL:", audioUrl);
+  };
+
+  const generateVideoInfo = async (prompt) => {
     console.log("Prompt:", prompt);
     const initialVideoData = {
       title: "Generating...",
@@ -140,7 +155,7 @@ export default function GenerateVideo() {
     setVideoStatus('Uploading Video Data...');
 
     try {
-      const response = await fetch(`${apiUrl}uploadData`, {
+      const response = await fetch(`${apiUrl}MongoDB/uploadData`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +202,7 @@ export default function GenerateVideo() {
     };
 
     try {
-      const response = await fetch(`${apiUrl}updateCollection`, {
+      const response = await fetch(`${apiUrl}MongoDB/addData`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(payload),
@@ -297,7 +312,8 @@ export default function GenerateVideo() {
       </ScrollView>
 
       <View style={styles.promptContainer}>
-        <PromptInput onSend={(prompt) => generateVideo(prompt)} />
+        {/* <PromptInput onSend={(prompt) => generateVideo(prompt)} /> */}
+        <PromptInput onSend={(prompt) => generateAudioNative(prompt)} />
         {/* <PromptInput onSend={uploadVideoData} /> */}
 
         

@@ -14,3 +14,5 @@ async function generateThumbnail(prompt) {
    
 
 export default generateThumbnail;
+
+

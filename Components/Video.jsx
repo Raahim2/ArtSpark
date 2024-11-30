@@ -44,7 +44,7 @@ const VideoPlayer = ({ videoSource }) => {
       <View style={styles.videoContainer} onTouchEnd={handlePlayPause}>
         <Video
           ref={videoRef}
-          source={videoSource.uri}
+          source={{ uri: videoSource }}
           style={styles.video}
           onLoad={(status) => {
             setLoading(false);

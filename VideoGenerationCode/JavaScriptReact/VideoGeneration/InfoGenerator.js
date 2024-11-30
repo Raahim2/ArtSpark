@@ -17,7 +17,7 @@ async function generateInfo(basePrompt, duration) {
   let desc = await Gemini(descPrompt);
   desc = desc.replace(/["']/g, "");
 
-  const imagePrompt = `I Want search images and videos with Pexels API for Video Title \`${title}\`\nGive me one word to fetch best images on pexels for my video \nOutput only one - two word nothing else Also Remove Any Special Characters Symbols or Emojis`;
+  const imagePrompt = `I want to search for images and videos using the Pexels API for the video titled \`${title}\`. Please generate **one single word** that best represents the core subject of the video. The word should be broad enough to find relevant content but specific enough to focus on the main theme. Output only one word, nothing else.`;
   let oneWord = await Gemini(imagePrompt);
   oneWord = oneWord.replace(/["']/g, "");
 
