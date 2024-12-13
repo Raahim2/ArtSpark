@@ -5,6 +5,7 @@ import GenerateVideo from './Screens/GenerateVideo'
 import SearchScreen from './Screens/SearchScreen'
 import ProjectsScreen from './Screens/ProjectsScreen'
 import SettingsScreen from './Screens/SettingsScreen'
+import Login from './Screens/Login'
 import { ColorProvider } from './assets/Variables/colors'
 
 const Stack = createNativeStackNavigator();
@@ -14,6 +15,7 @@ export default function App() {
     <ColorProvider>
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen name="Login" component={Login} options={{ headerShown: true }} />
         <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="New" component={GenerateVideo} options={{ headerShown: false }} />
         <Stack.Screen name="Search" component={SearchScreen} options={{ headerShown: false }} />

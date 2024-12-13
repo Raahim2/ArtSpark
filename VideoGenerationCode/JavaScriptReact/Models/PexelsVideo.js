@@ -50,7 +50,7 @@ const getVideosAndDurations = async (query, numVideo, targetAspectRatio = 16 / 9
                 return [];
             }
         } else {
-            console.log(`Failed to retrieve videos. Status code: ${response.status}`);
+            console.log(`Failed to retrieve videos. Status code: ${response}`);
             return [];
         }
     } catch (error) {

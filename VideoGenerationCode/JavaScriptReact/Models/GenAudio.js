@@ -15,7 +15,7 @@ const genAudio = async (text) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Hugging Face API Error: ${response.statusText}`);
+      throw new Error(`Hugging Face API Error: ${response}`);
     }
 
     const arrayBuffer = await response.arrayBuffer();

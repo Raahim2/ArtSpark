@@ -17,6 +17,8 @@ export const ColorProvider = ({ children }) => {
         sidebarBackground: '#222',
         iconColor: '#000',
         durationBackground: 'rgba(0, 0, 0, 0.7)',
+        primary: '#9D00FF', 
+        danger: '#FF3333',
         theme1: '#9D00FF',
         theme2: '#000000',
         theme3: '#FF3333',

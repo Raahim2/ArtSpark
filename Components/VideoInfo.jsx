@@ -73,10 +73,7 @@ export default function VideoInfo({ title, description }) {
 
 
       {/* Next Button */}
-      <View style={styles.buttonContainer}>
-        {/* <Button title="Upload Video" onPress={UploadVideo} color={colors.theme} /> */}
-        <UploadBtn />
-      </View>
+      <UploadBtn />
     </View>
   );
 }

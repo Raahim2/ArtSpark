@@ -228,47 +228,27 @@ def check_task_status(task_id):
         return None
 
 
-import requests
-import time
 
-# URL of the deployed Flask app on Vercel
-base_url = "https://api-for-test.vercel.app"
-
-# Video URLs (Pexels video URLs or valid video file URLs)
-video1_url = "https://videos.pexels.com/video-files/3173312/3173312-hd_1920_1080_30fps.mp4"
-video2_url = "https://videos.pexels.com/video-files/3173313/3173313-uhd_2560_1440_30fps.mp4"
+def delete_all():
+    api_url = "http://api-for-test.vercel.app/MongoDB/deleteAllData"
 
 
-data = {
-    'video1_url': video1_url,
-    'video2_url': video2_url
-}
-
-response = requests.post(f"{base_url}/concat_videos", json=data)
-
-# Check if the request was successful and the job started
-if response.status_code == 202:
-    job_id = response.json().get('job_id')
-    print(f"Video concatenation started. Job ID: {job_id}")
-
-    # Step 2: Poll the /get_video endpoint until the video is ready
-    video_ready = False
-    while not video_ready:
-        time.sleep(5)  # Wait 5 seconds before checking again
+    try:
+        response = requests.post(api_url)
         
-        # Step 3: Check the result by calling the /get_video endpoint
-        result_response = requests.get(f"{base_url}/get_video?job_id={job_id}")
+        if response.status_code != 200:
+            print("Error deleting all data:", response.text)
+            return None
         
-        if result_response.status_code == 200:
-            # Save the resulting video
-            with open("concatenated_video.mp4", "wb") as f:
-                f.write(result_response.content)
-            print("Video saved successfully.")
-            video_ready = True  # Exit the loop after saving the video
-        elif result_response.status_code == 404:
-            print("Video not ready yet, retrying...")
-        else:
-            print(f"Error retrieving video: {result_response.status_code}, {result_response.text}")
-            break
-else:
-    print(f"Failed to start video concatenation: {response.status_code}, {response.text}")
+        response_data = response.json()
+        message = response_data.get("message")
+        print(f"Delete All Data Response: {message}")
+        
+        return message
+
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while deleting all data: {e}")
+        return None
+
+
+# delete_all()

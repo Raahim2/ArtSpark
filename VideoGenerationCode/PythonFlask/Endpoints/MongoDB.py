@@ -3,8 +3,9 @@ import uuid
 import tempfile
 import base64
 import os
+import requests
 from pymongo import MongoClient
-from Models.OnlineUpload import upload_image_to_cloudinary , upload_audio_to_cloudinary
+from Models.OnlineUpload import upload_image_to_cloudinary , upload_audio_to_cloudinary , upload_video_to_cloudinary
 
 mongo_uri = os.getenv("MONGO_URI")
 gentube_api_key = os.getenv("GENTUBE_API_KEY")
@@ -150,6 +151,7 @@ def upload_image():
 
 @MongoDb.route('/uploadAudio', methods=['POST'])
 def upload_audio():
+    print("a request came")
     if request is None or request.get_json() is None:
         return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
         
@@ -174,6 +176,42 @@ def upload_audio():
         audio_url = upload_audio_to_cloudinary(temp_file_path)
         
         return jsonify({"message": "Audio uploaded successfully", "audio_url": audio_url}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@MongoDb.route('/uploadVideo', methods=['POST'])
+def upload_video():
+    print("A request came to upload video")
+    if request is None or request.get_json() is None:
+        return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
+        
+    provided_api_key = request.headers.get("Authorization")
+
+    if provided_api_key != gentube_api_key:
+        return jsonify({"message": "Invalid API Key"}), 403
+    
+    try:
+        request_data = request.get_json()
+        video_url = request_data.get("video_url")
+        
+        if not video_url:
+            return jsonify({"error": "No video URL provided"}), 400
+        
+        # Download the video from the provided URL
+        response = requests.get(video_url)
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to download video from the provided URL"}), 400
+        
+        # Save the video to a temporary file
+        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_file:
+            temp_file.write(response.content)
+            temp_file_path = temp_file.name
+        
+        # Upload the video to Cloudinary using the temporary file path
+        uploaded_video_url = upload_video_to_cloudinary(temp_file_path)
+        
+        return jsonify({"message": "Video uploaded successfully", "video_url": uploaded_video_url}), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500

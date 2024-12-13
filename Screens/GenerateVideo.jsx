@@ -1,5 +1,5 @@
 import React, { useState, useRef  , useEffect } from 'react'
-import { View, Text, StyleSheet, ScrollView, Animated, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Animated, Alert , Button } from 'react-native';
 
 import BottomNavigation from '../Components/BottomNavigation';
 import UpperNavigation from '../Components/UpperNavigation';
@@ -26,10 +26,15 @@ export default function GenerateVideo() {
   
   const [colors] = useColorContext();
   const styles = createStyles(colors);
-  const [duration, setDuration] = useState(200);
+  const [duration, setDuration] = useState(30);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
-  const [videoData, setVideoData] = useState(null);
+  // const [videoData, setVideoData] = useState(null);
+  const [videoData, setVideoData] = useState({
+    title: "IS this entititled to be shown to the user?",
+    description: "Generating a long long description that is not needed to be shown to the user and is just for testing purposes so that the user can see the progress of the video generation...",
+    id: null,
+  });
   const [isThumbnailGenerated, setIsThumbnailGenerated] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const [videoStatus, setVideoStatus] = useState("Generating Video...");
@@ -73,20 +78,21 @@ export default function GenerateVideo() {
   };
 
 
-  const generateVideo = async (prompt) => {
-    console.log("Before Generating Video");
+  const generateVideo = async (prompt , duration) => {
+    console.log(`Started Video Generation for Prompt : ${prompt} And Duration ${duration}` );
     setVideoStatus('Initializing...');  
     setVideoSource(null);
     setIsThumbnailGenerated(false);
     setThumbnailUrl(null);
 
-    const videoData = await generateVideoInfo(prompt);
+    
+    const videoData = await generateVideoInfo(prompt , duration);
     console.log("Video Data:", videoData);
     const videoId = await uploadVideoData(videoData.title, videoData.description, videoData.duration, videoData.oneWord, videoData.createdAt);
     
     setVideoStatus('Generating Thumbnail...');
-    // const thumbnailUrl = await generateThumbnail(videoData.title);
-    const thumbnailUrl = "https://via.placeholder.com/400x300/FFY6SF/FF9JK";
+    const thumbnailUrl = await generateThumbnail(videoData.oneWord);
+    // const thumbnailUrl = "https://via.placeholder.com/400x300/FFY6SF/FF9JK";
     console.log("Thumbnail URL:", thumbnailUrl);
 
     setIsThumbnailGenerated(true);
@@ -101,26 +107,31 @@ export default function GenerateVideo() {
     const addUrls = await updateCollection(videoId, "video_urls", urls)
     console.log("\n\n"+addUrls.message);
 
-    setVideoStatus('Compiling Videos...');
-    const finalVideoUrl = await concatVideos(urls);
-    console.log(finalVideoUrl);
 
-    const addFinalVideoUrl = await updateCollection(videoId, "video_urls", finalVideoUrl)
-    console.log("\n\n"+addFinalVideoUrl.message);
+    // For AI Generated Audio , Using Random BG music Instead
+    // setVideoStatus('Generating Audio....');
+    // const audioUrl = await generateAudio(videoData.script);
+    // console.log("Audio URL:", audioUrl);
+
+    setVideoStatus('Compiling Videos...');
+    
+    const finalVideoUrl = await concatVideos(urls);
+    console.log("Final Video URL: " + finalVideoUrl);
+
+    const addFinalVideoUrl = await updateCollection(videoId, "video_urls", finalVideoUrl);
+    console.log("\n\n" + addFinalVideoUrl.message);
 
     setVideoSource(finalVideoUrl);
     setVideoStatus('Video Generation Completed!');
 
     
-    console.log("After Video Generation");
+    console.log(`Video Generated for Prompt : ${prompt} And Duration ${duration}` );
+
   };
 
-  const generateAudioNative = async (prompt) => {
-    const audioUrl = await generateAudio(prompt);
-    console.log("Audio URL:", audioUrl);
-  };
 
-  const generateVideoInfo = async (prompt) => {
+
+  const generateVideoInfo = async (prompt , duration) => {
     console.log("Prompt:", prompt);
     const initialVideoData = {
       title: "Generating...",
@@ -131,13 +142,14 @@ export default function GenerateVideo() {
     setVideoStatus('Generating Video Information...');
 
     try {
-      const videoInfo = await generateInfo(prompt, 10); 
+      const videoInfo = await generateInfo(prompt, duration); 
       const newVideoData = {
         prompt: prompt,
         title: videoInfo["Video Title"],
         description: videoInfo["Video Description"],
         duration: videoInfo["Video Duration"],
         oneWord: videoInfo["OneWord"],
+        script : videoInfo["Video Script"],
         createdAt: new Date().toLocaleDateString('en-GB'),
       };
       setVideoData(newVideoData);
@@ -150,7 +162,7 @@ export default function GenerateVideo() {
 
   }
 
-  const uploadVideoData = async (title, description, duration, oneWord, createdAt) => {
+  const uploadVideoData = async (title, description, duration, oneWord ,createdAt) => {
     console.log("Uploading Video Data...\n\n");
     setVideoStatus('Uploading Video Data...');
 
@@ -274,8 +286,6 @@ export default function GenerateVideo() {
 
 
 
-
-
   return (
     <>
       <UpperNavigation toggleSidebar={toggleSidebar} title={"Generate Video"} />
@@ -312,14 +322,7 @@ export default function GenerateVideo() {
       </ScrollView>
 
       <View style={styles.promptContainer}>
-        {/* <PromptInput onSend={(prompt) => generateVideo(prompt)} /> */}
-        <PromptInput onSend={(prompt) => generateAudioNative(prompt)} />
-        {/* <PromptInput onSend={uploadVideoData} /> */}
-
-        
-
-
-        {/* <PromptInput onSend={(prompt) => dummyGenerateVideo(prompt)} /> */}
+        <PromptInput onSend={(prompt , duration) => generateVideo(prompt , duration)} /> 
       </View>
 
       <BottomNavigation />

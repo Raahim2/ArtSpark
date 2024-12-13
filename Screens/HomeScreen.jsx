@@ -7,7 +7,6 @@ import WhatsNew from '../Components/WhatsNew';
 import Icon from '../Components/Icon';
 import SuggestionPrompt from '../Components/SuggestionPrompt';
 import VideoPlayer from '../Components/Video';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Animated } from 'react-native';
 import { useColorContext } from '../assets/Variables/colors';
 

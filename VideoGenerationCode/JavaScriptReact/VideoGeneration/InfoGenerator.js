@@ -21,15 +21,23 @@ async function generateInfo(basePrompt, duration) {
   let oneWord = await Gemini(imagePrompt);
   oneWord = oneWord.replace(/["']/g, "");
 
+  const scriptPrompt = `Generate a video script for the video titled "${title}". The script should be in paragraph format And Exactly of ${duration*3} Words , Please dont add any Special Charecters in the script`;
+  let Script = await Gemini(scriptPrompt);
+  Script = Script.replace(/["']/g, "");
+
+
+
   console.log(`Title: ${title}`);
   console.log(`Description: ${desc}`);
   console.log(`OneWord: ${oneWord}`);
+  console.log(`Script: ${Script}`);
 
   const data = {
     "Video Title": title,
     "Video Description": desc,
     "Video Duration": duration,
-    "OneWord": oneWord
+    "OneWord": oneWord,
+    "Video Script": Script
   };
 
   return data;
