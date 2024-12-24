@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ImageBackground, Text, TextInput, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import {GENTUBE_API_KEY} from '@env'
 
 const { height, width } = Dimensions.get('window');
+const BASE_URL = 'https://gentube.vercel.app'; 
 
 const SignUpScreen = () => {
   const navigation = useNavigation();
@@ -10,7 +12,7 @@ const SignUpScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleCreateAccount = () => {
+  const handleCreateAccount = async () => {
     if (!username || !email || !password) {
       Alert.alert(
         "Missing Information",
@@ -20,16 +22,47 @@ const SignUpScreen = () => {
       return;
     }
 
-    Alert.alert(
-      "Success",
-      "Account created successfully!",
-      [
-        { 
-          text: "OK",
-          onPress: () => navigation.navigate('Home')
-        }
-      ]
-    );
+    try {
+      const response = await fetch(`${BASE_URL}/MongoDB/createUser`, {
+        method: 'POST',
+        headers: {
+          'Authorization': GENTUBE_API_KEY, // Replace with your actual API key
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: username,
+          email: email,
+          password: password
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.status === 201) {
+        Alert.alert(
+          "Success",
+          "Account created successfully!",
+          [
+            { 
+              text: "OK",
+              onPress: () => navigation.navigate('Home')
+            }
+          ]
+        );
+      } else {
+        throw new Error(data.error || 'Failed to create account');
+      }
+    } catch (error) {
+      let errorMessage = "Failed to create account";
+      if (error.response?.status === 409) {
+        errorMessage = "Username or email already exists";
+      }
+      Alert.alert(
+        "Error",
+        errorMessage,
+        [{ text: "OK" }]
+      );
+    }
   };
 
   return (

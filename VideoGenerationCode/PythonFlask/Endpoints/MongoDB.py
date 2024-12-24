@@ -5,7 +5,7 @@ import base64
 import os
 import requests
 import bcrypt
-import datetime
+from datetime import datetime
 from pymongo import MongoClient
 from Models.OnlineUpload import upload_image_to_cloudinary , upload_audio_to_cloudinary , upload_video_to_cloudinary
 
@@ -290,7 +290,6 @@ def update_project():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @MongoDb.route('/createUser', methods=['POST'])
 def create_user():
     if request is None or request.get_json() is None:
@@ -322,12 +321,16 @@ def create_user():
         salt = bcrypt.gensalt()
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
 
+        # Generate user ID
+        user_id = str(uuid.uuid4())
+
         # Create new user document
         new_user = {
+            "user_id": user_id,
             "username": username,
             "email": email,
             "password": hashed_password,
-            "created_at": datetime.datetime.utcnow()
+            "created_at": datetime.now().strftime("%d/%m/%Y")
         }
 
         # Insert into MongoDB
@@ -336,6 +339,7 @@ def create_user():
         if result.inserted_id:
             return jsonify({
                 "message": "User created successfully",
+                "user_id": user_id,
                 "username": username,
                 "email": email
             }), 201
