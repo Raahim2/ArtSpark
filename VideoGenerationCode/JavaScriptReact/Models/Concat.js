@@ -61,10 +61,23 @@ const getRenderStatus = async (renderId) => {
     }
   };
 
-const concatVideos = async (videoUrls) => {
+const concatVideos = async (videoUrls , projectCategory) => {
     const endpoint = "https://api.shotstack.io/stage/render"; // Replace with the correct endpoint
     audioUrl = getRandomAudio()
     console.log("Concatinating Video and adding audio form url "+ audioUrl)
+    let width;
+    let height;
+
+    if (projectCategory === 'Shorts') {
+      width = 720;  // 9:16 aspect ratio
+      height = 1280; // 9:16 aspect ratio
+    } else {
+      width = 1920; // 16:9 aspect ratio
+      height = 1080; // 16:9 aspect ratio
+    }
+    console.log("Width: " + width);
+    console.log("Height: " + height);
+    
   
     // Prepare the payload for concatenation
     const payload = {
@@ -100,8 +113,8 @@ const concatVideos = async (videoUrls) => {
       output: {
         format: "mp4",
         size: {
-          width: 1280,
-          height: 720,
+          width: width,
+          height: height,
         },
       },
     };

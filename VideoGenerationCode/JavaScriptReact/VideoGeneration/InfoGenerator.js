@@ -43,5 +43,11 @@ async function generateInfo(basePrompt, duration) {
   return data;
 }
 
+async function generatePrompt() {
+  console.log("Generating Random Prompt");
+  const prompt = await Gemini("Generate a random prompt for a video");
+  return prompt;
+}
 
-export default generateInfo;
+
+export default {generateInfo , generatePrompt};

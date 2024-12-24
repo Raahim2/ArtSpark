@@ -1,37 +1,47 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
-const ProjectItem = ({ title, type, imageSource }) => {
-  const [isChecked, setIsChecked] = useState(false);
+const ProjectItem = ({ title, type, imageSource, date, width, id }) => {
+  const navigation = useNavigation();
 
   const handlePress = () => {
-    setIsChecked(!isChecked);
+    navigation.navigate('VideoDetails', {
+      videoId: id
+    });
   };
 
+  // Truncate title to 10 characters
+  const truncatedTitle = title
+    .replace(/\s+/g, ' ') // Replace all newlines and extra spaces with a single space
+    .trim() // Remove leading and trailing spaces
+    .split(' ') // Split the title into words
+    .slice(0, 2) // Take the first two words
+    .join(' ') + // Join them back with a space
+    (title.split(/\s+/).length > 2 ? '...' : ''); // Add ellipsis if there are more than two words
+
   return (
-    <TouchableOpacity onPress={handlePress} style={styles.projectItem}>
-      <View style={styles.imageContainer}>
-        <Image source={imageSource} style={styles.image} />
-        <TouchableOpacity style={styles.checkbox} onPress={handlePress}>
-          <Ionicons name={isChecked ? "checkbox" : "square-outline"} size={18} color="black" />
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{type}</Text>
-    </TouchableOpacity>
+    <View style={{ width: width }}>
+      <TouchableOpacity onPress={handlePress} style={styles.projectItem}>
+        <View style={styles.imageContainer}>
+          <Image source={imageSource} style={styles.image} />
+        </View>
+        <Text style={styles.title}>{truncatedTitle}</Text>
+        <Text style={styles.subtitle}>{type}</Text>
+        <Text style={styles.subtitle}>{date}</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   projectItem: {
-    width: '48%',
-    marginBottom: 10,
+    margin: 5,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 5,
-    padding: 5,
-    position: 'relative',
+    padding: 5
   },
   imageContainer: {
     position: 'relative',
@@ -40,30 +50,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 100,
     borderRadius: 5,
-  },
-  checkbox: {
-    borderRadius: 5,
-    backgroundColor: 'white',
-    position: 'absolute',
-    top: 5,
-    left: 5,
-    padding: 2,
-  },
-  star: {
-    borderRadius: 5,
-    backgroundColor: 'white',
-    position: 'absolute',
-    top: 5,
-    right: 30,
-    padding: 2,
-  },
-  menu: {
-    borderRadius: 5,
-    backgroundColor: 'white',
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    padding: 2,
   },
   title: {
     fontSize: 14,

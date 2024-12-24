@@ -28,20 +28,15 @@ const createStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    marginVertical: 20,
-    borderColor: colors.theme,
-    borderWidth: 2,
     overflow: 'hidden',
-    borderRadius: 15,
-    backgroundColor: colors.background,
+    borderBottomColor: colors.theme,
+    borderBottomWidth: 2,
   },
   
   thumbnail: {
     width: '100%',
     height: 'auto',
-    aspectRatio: 16 / 9,
-    backgroundColor: colors.lightGray,
-    borderRadius: 10,
+    aspectRatio: 16 / 9
   },
   
   statusContainer: {

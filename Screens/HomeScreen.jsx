@@ -1,21 +1,78 @@
 import { StyleSheet, View, SafeAreaView, ScrollView , Text , TouchableOpacity, Image} from 'react-native';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef  , useEffect , } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import BottomNavigation from '../Components/BottomNavigation';
 import UpperNavigation from '../Components/UpperNavigation';
 import SideBar from '../Components/SideBar';
 import WhatsNew from '../Components/WhatsNew';
 import Icon from '../Components/Icon';
 import SuggestionPrompt from '../Components/SuggestionPrompt';
+import ProjectItem from '../Components/ProjectItem';
 import VideoPlayer from '../Components/Video';
+import { ActivityIndicator } from 'react-native';
 import { Animated } from 'react-native';
 import { useColorContext } from '../assets/Variables/colors';
+import { GENTUBE_API_KEY } from '@env';
+
 
 
 export default function HomeScreen() {
+  const navigation = useNavigation();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
   const [colors] = useColorContext();
   const styles = createStyles(colors);
+  const apiUrl = 'https://api-for-test.vercel.app';  // Replace with your actual Vercel URL
+
+
+  const fetchProjects = async () => {
+    setLoading(true); // Set loading to true before the request
+
+    try {
+      const response = await fetch(`${apiUrl}/MongoDB/GetProjects`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': GENTUBE_API_KEY,
+        },
+        body: JSON.stringify({})  // Add an empty object or any required payload
+      });
+      
+
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        setError(`Error Fetching Projects: ${errorMessage}`); // Set error state
+        setLoading(false); 
+        return;
+      }
+
+      const responseData = await response.json();
+      setProjects(responseData);
+      setLoading(false);  // Set loading to false after successful request
+
+    } catch (error) {
+      setError(`Error: ${error.message}`);  // Update error state if there's an exception
+      setLoading(false); // Set loading to false
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();  
+  }, []);
+
+
+  const VideoProjects = projects.filter((project) => {
+    const categoryMatch = project.category === 'Video';
+    return categoryMatch 
+  });
+
+  const ShortsProjects = projects.filter((project) => {
+    const categoryMatch = project.category === 'Shorts';
+    return categoryMatch 
+  });
 
   const toggleSidebar = () => {
     const toValue = isSidebarOpen ? 0 : 1;
@@ -29,6 +86,7 @@ export default function HomeScreen() {
 
   return (
     <>
+      {/* <VideoPlayer videoSource={"https://res.cloudinary.com/defyovyob/video/upload/v1734363387/vxyfyasg1gnjxxiyosv4.mp4"}  /> */}
       <UpperNavigation toggleSidebar={toggleSidebar} title={"Home"} />
       <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
 
@@ -38,63 +96,117 @@ export default function HomeScreen() {
 
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 }}>
-            <Icon iconName="videocam" label="Video" />
-            <Icon iconName="film" label="Shorts" />
-            <Icon iconName="people" label="Post" />
-            <Icon iconName="image" label="Thumbnail" />
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
+              <Icon iconName="videocam" label="Video" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts' })}>
+              <Icon iconName="film" label="Shorts" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Post' })}>
+              <Icon iconName="people" label="Post" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Thumbnail' })}>
+              <Icon iconName="image" label="Thumbnail" />
+            </TouchableOpacity>
           </View>
 
           <SuggestionPrompt />
 
-          <View style={styles.videoSection}>
-            <View style={styles.videoHeader}>
-              <Text style={styles.Title}>Recent Videos</Text>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {Array(3).fill().map((_, index) => (
-                <View key={index} style={styles.videoContainer}>
-                  <VideoPlayer videoSource={{ uri: require('../assets/Videos/concat.mp4') }} style={styles.video} />
-                </View>
-              ))}
-
-            <View style={[styles.videoContainer, { justifyContent: 'center', alignItems: 'center' }]}>
-              <TouchableOpacity >
-                <Icon iconName="add" size={50} />
-              </TouchableOpacity>
-            </View>
-            </ScrollView>
-          </View>
-
           <View style={styles.mobileVideosSection}>
             <View style={styles.mobileVideosHeader}>
-              <Text style={styles.mobileVideosTitle}>Shorts Videos</Text>
-              <TouchableOpacity>
+              <Text style={styles.mobileVideosTitle}>Recent Videos</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Projects')}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {Array(4).fill().map((_, index) => (
-                <View key={index} style={styles.imageContainer}>
-                  <Image source={require('../assets/Images/image.png')} style={styles.image} />
-                </View>
-              ))}
+                {loading ? (
+                  <ActivityIndicator size="large" color="#0000ff" />
+                ) : error ? (
+                  <ProjectItem
+                      width={170}
+                      title="Error"
+                      type={error}
+                      imageSource={{ uri: 'https://miro.medium.com/v2/resize:fit:1400/1*MXyMqcEJ6Se0SCWcYCKZTQ.jpeg' }}
+                    />
+                ) : (
 
-              <View style={[styles.imageContainer, { justifyContent: 'center', alignItems: 'center' , borderWidth: 1 , borderRadius: 10 }]}>
-                <TouchableOpacity >
-                  <Icon iconName="add" size={50} />
-              </TouchableOpacity>
-            </View>
-            </ScrollView>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} >
+                    
+                    {VideoProjects.length > 0 ? (
+                      VideoProjects.map((project, index) => (
+                        <ProjectItem
+                          width={170}
+                          key={index}
+                          title={project.title}
+                          type={project.category}
+                          imageSource={{ uri: project.thumbnail_url }}
+                          date={project.createdAt}
+                          id={project.project_id}
+                        />
+                      ))
+                    ) : (
+                      <Text style={styles.noProjectsText}>No projects found</Text>
+                    )}
+                      <View style={styles.addButton}>
+                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
+                            <Icon iconName="add" size={50} />
+                        </TouchableOpacity>
+                      </View>
+                    </ScrollView> 
+                )}
           </View>
 
-          
+
+          <View style={styles.mobileVideosSection}>
+            <View style={styles.mobileVideosHeader}>
+              <Text style={styles.mobileVideosTitle}>Recent Shorts</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Projects')}>
+                <Text style={styles.seeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+                {loading ? (
+                  <ActivityIndicator size="large" color="#0000ff" />
+                ) : error ? (
+                  <ProjectItem
+                      width={170}
+                      title="Error"
+                      type={error}
+                      imageSource={{ uri: 'https://miro.medium.com/v2/resize:fit:1400/1*MXyMqcEJ6Se0SCWcYCKZTQ.jpeg' }}
+                    />
+                ) : (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} >
+                    
+                    {ShortsProjects.length > 0 ? (
+                      ShortsProjects.map((project, index) => (
+                        <ProjectItem
+                          width={170}
+                          key={index}
+                          title={project.title}
+                          type={project.category}
+                          imageSource={{ uri: project.thumbnail_url }}
+                          date={project.createdAt}
+                          id={project.project_id}
+                        />
+                      ))
+                    ) : (
+                      <Text style={styles.noProjectsText}>No projects found</Text>
+                    )}
+                      <View style={styles.addButton}>
+                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts' })}>
+                            <Icon iconName="add" size={50} />
+                        </TouchableOpacity>
+                      </View>
+                    </ScrollView> 
+                )}
+          </View>
+
 
           <View style={{ marginBottom: 100 }}>
           </View>
 
 
 
-          
+        
         </ScrollView>
       </SafeAreaView>
       
@@ -104,7 +216,19 @@ export default function HomeScreen() {
 }
 
 const createStyles = (colors) => StyleSheet.create({
- 
+  addButton: {
+    width: 170,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin:5,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 5
+  },
+  projectItemWrapper: {
+    margin: 10,
+  },
   videoSection: {
     paddingHorizontal: 10,
     marginVertical: 20,
@@ -154,7 +278,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   seeAll: {
     fontSize: 14,
-    color: colors.primary,
+    color: colors.theme,
   },
   imageContainer: {
     marginRight: 15,

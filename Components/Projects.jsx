@@ -1,68 +1,78 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import ProjectItem from './ProjectItem';
+import { View, Text, StyleSheet, ScrollView  , Image} from 'react-native';
+import ProjectItem from './ProjectItem'; 
 
-
-const Projects = () => {
+const Projects = ({ projects, loading, error }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Designs</Text>
-      <ScrollView contentContainerStyle={styles.projectsGrid} showsVerticalScrollIndicator={false}>
-        {Array(16).fill().map((_, index) => (
-          <ProjectItem
-            key={index}
-            title="Soft Watercolour No Copy P..."
-            type="Phone Wallpaper"
-            imageSource={require('../assets/Images/image.png')}
-          />
-        ))}
-      </ScrollView>
+    <View>
+      <Text style={styles.header}>Projects</Text>
+
+      {loading ? (
+        <Text style={styles.loadingText}>Loading projects...</Text>
+      ) : error ? (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 60}}>
+          <Image source={require('../assets/Images/Error.png')}  />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.projectsGrid}
+          showsVerticalScrollIndicator={false}
+        >
+          {projects.length > 0 ? (
+           projects.map((project, index) => (
+              <ProjectItem
+                width={'50%'}
+                key={index}
+                title={project.title}
+                type={project.category}
+                imageSource={{ uri: project.thumbnail_url }}
+                date={project.createdAt}
+                id={project.project_id}
+              />
+            ))
+          ) : (
+            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 60}}>
+              <Image source={require('../assets/Images/NotFound.png')}  />
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 };
 
+
 const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-  },
+  
   header: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
+    marginLeft: 10,
+    
   },
   projectsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  projectItem: {
-    width: '48%',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 5,
-    position: 'relative',
+  loadingText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginVertical: 20,
   },
-  image: {
-    width: '100%',
-    height: 100,
-    borderRadius: 5,
+  errorText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginVertical: 20,
+    color: 'red',
   },
-  title: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 5,
-  },
-  subtitle: {
-    fontSize: 12,
-    color: '#666',
-  },
-  iconButton: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
+  noProjectsText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginVertical: 20,
+    color: 'gray',
   },
 });
 

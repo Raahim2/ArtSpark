@@ -1,4 +1,3 @@
-import logging
 import ffmpeg
 import os
 import requests
@@ -7,7 +6,6 @@ import threading
 from Models.OnlineUpload import upload_video_to_cloudinary  
 import certifi
 
-logging.basicConfig(level=logging.INFO)
 
 VideoEditing = Blueprint('VideoEditing', __name__)
 
@@ -19,7 +17,6 @@ if not os.path.exists(TEMP_DIR):
 
 def download_video(url, filename):
     try:
-        logging.info(f"Downloading video from {url} to {filename}")
         # Use certifi for SSL verification to ensure robust handling of SSL certificates
         response = requests.get(url, stream=True, timeout=30, verify=certifi.where())
         response.raise_for_status()  # Check for HTTP errors
@@ -27,21 +24,21 @@ def download_video(url, filename):
         with open(filename, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
-        logging.info(f"Downloaded video saved to {filename}")
+        print(f"Downloaded video saved to {filename}")
     except requests.exceptions.SSLError as ssl_error:
-        logging.error(f"SSL error while downloading video from {url}: {ssl_error}")
+        print(f"SSL error while downloading video from {url}: {ssl_error}")
         raise
     except requests.exceptions.RequestException as req_error:
-        logging.error(f"Request error while downloading video from {url}: {req_error}")
+        print(f"Request error while downloading video from {url}: {req_error}")
         raise
     except Exception as e:
-        logging.error(f"Unexpected error while downloading video from {url}: {e}")
+        print(f"Unexpected error while downloading video from {url}: {e}")
         raise
 
 
 def concatenate_videos(video_paths, output_path):
     try:
-        logging.info(f"Starting to concatenate {len(video_paths)} videos without audio.")
+        print(f"Starting to concatenate {len(video_paths)} videos without audio.")
         
         if len(video_paths) < 2:
             raise ValueError("At least two videos are required for concatenation.")
@@ -65,16 +62,16 @@ def concatenate_videos(video_paths, output_path):
         inputs = [ffmpeg.input(video) for video in temp_video_files]
         ffmpeg.concat(*inputs, v=1, a=0).output(output_path).run()
 
-        logging.info(f"Concatenation completed successfully, saved to {output_path}.")
+        print(f"Concatenation completed successfully, saved to {output_path}.")
     except Exception as e:
-        logging.error(f"Error concatenating videos: {e}")
+        print(f"Error concatenating videos: {e}")
         raise
 
 
 def process_video(video_urls, job_id):
     result_file = {}
     try:
-        logging.info(f"Job {job_id} - Starting to download videos.")
+        print(f"Job {job_id} - Starting to download videos.")
         video_filenames = []
 
         # Download all videos
@@ -83,23 +80,23 @@ def process_video(video_urls, job_id):
             download_video(video_url, video_filename)
             video_filenames.append(video_filename)
 
-        logging.info(f"Job {job_id} - Videos downloaded successfully.")
+        print(f"Job {job_id} - Videos downloaded successfully.")
         output_filename = os.path.join(TEMP_DIR, f"output_{job_id}.mp4")
         
         # Concatenate the videos
         concatenate_videos(video_filenames, output_filename)
-        logging.info(f"Job {job_id} - Videos concatenated successfully.")
+        print(f"Job {job_id} - Videos concatenated successfully.")
 
         # Upload the concatenated video to Cloudinary
         video_url = upload_video_to_cloudinary(output_filename)
         result_file['output_path'] = video_url  # Store the Cloudinary URL
         job_results[job_id] = result_file
 
-        logging.info(f"Job {job_id} - Video uploaded to Cloudinary: {video_url}")
+        print(f"Job {job_id} - Video uploaded to Cloudinary: {video_url}")
     except Exception as e:
         result_file['error'] = str(e)
         job_results[job_id] = result_file
-        logging.error(f"Job {job_id} - Error: {e}")
+        print(f"Job {job_id} - Error: {e}")
 
 
 @VideoEditing.route('/concat_videos', methods=['POST'])
@@ -114,7 +111,7 @@ def concat_videos():
         threading.Thread(target=process_video, args=(video_urls, job_id)).start()
         return jsonify({"message": "Video concatenation started.", "job_id": job_id}), 202
     except Exception as e:
-        logging.error(f"Error in /concat_videos endpoint: {e}")
+        print(f"Error in /concat_videos endpoint: {e}")
         return jsonify({"error": "An error occurred while starting video concatenation."}), 500
 
 
@@ -130,5 +127,5 @@ def get_video():
         else:
             return jsonify({"error": "Job not found or not yet completed."}), 404
     except Exception as e:
-        logging.error(f"Error in /get_video endpoint: {e}")
+        print(f"Error in /get_video endpoint: {e}")
         return jsonify({"error": "An error occurred while retrieving the video."}), 500

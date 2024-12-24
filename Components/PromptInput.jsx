@@ -3,13 +3,14 @@ import { View, TextInput, StyleSheet, Modal, Text, TouchableOpacity } from 'reac
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorContext } from '../assets/Variables/colors';
+import InfoGenerator from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/InfoGenerator';
 
-const PromptInput = ({ onSend }) => {
-  const [inputText, setInputText] = useState('');
+const PromptInput = ({ onSend, projectCategory  , initialPrompt}) => {
+  const [inputText, setInputText] = useState(initialPrompt);
   const [colors] = useColorContext();
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMinutes, setSelectedMinutes] = useState('1');
-  const [selectedSeconds, setSelectedSeconds] = useState('0');
+  const [selectedMinutes, setSelectedMinutes] = useState('0');
+  const [selectedSeconds, setSelectedSeconds] = useState('30');
   const styles = createStyles(colors);
 
   const handleSend = () => {
@@ -26,17 +27,38 @@ const PromptInput = ({ onSend }) => {
 
   const handleTimeSet = () => {
     const totalSeconds = parseInt(selectedMinutes) * 60 + parseInt(selectedSeconds);
-    if (totalSeconds >= 1 && totalSeconds <= 600) {
+    if (
+      (projectCategory === 'Shorts' && totalSeconds >= 1 && totalSeconds <= 59) || 
+      (projectCategory !== 'Shorts' && totalSeconds >= 1 && totalSeconds <= 600)
+    ) {
       console.log(`Time set to: ${selectedMinutes} minutes and ${selectedSeconds} seconds`);
       setModalVisible(false);
     } else {
-      alert('Please select a time between 1 second and 10 minutes.');
+      alert(
+        projectCategory === 'Shorts'
+          ? 'Please select a time between 1 second and 59 seconds.'
+          : 'Please select a time between 1 second and 10 minutes.'
+      );
     }
   };
+
+  const setRandomPrompt = async() => {
+    console.log("Setting Random Prompt");
+    const randomPrompt = await InfoGenerator.generatePrompt();
+    console.log("Random Prompt:", randomPrompt);
+    setInputText(randomPrompt);
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
+      <Ionicons
+          name="shuffle"
+          size={24}
+          color={colors.theme}
+          style={styles.clockIcon}
+          onPress={setRandomPrompt}
+        />
         <Ionicons
           name="time"
           size={24}
@@ -68,23 +90,28 @@ const PromptInput = ({ onSend }) => {
             <TouchableOpacity style={styles.closeIcon} onPress={() => setModalVisible(false)}>
               <Ionicons name="close" size={24} color={colors.black} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Select Video Duration</Text>
+            <Text style={styles.modalTitle}>Select {projectCategory} Duration</Text>
             <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={selectedMinutes}
-                style={styles.picker}
-                onValueChange={(itemValue) => setSelectedMinutes(itemValue)}
-              >
-                {[...Array(10).keys()].map((i) => (
-                  <Picker.Item key={i} label={`${i} min`} value={`${i}`} />
-                ))}
-              </Picker>
+              {projectCategory !== 'Shorts' && (
+                <Picker
+                  selectedValue={selectedMinutes}
+                  style={styles.picker}
+                  onValueChange={(itemValue) => setSelectedMinutes(itemValue)}
+                >
+                  {[...Array(10).keys()].map((i) => (
+                    <Picker.Item key={i} label={`${i} min`} value={`${i}`} />
+                  ))}
+                </Picker>
+              )}
               <Picker
                 selectedValue={selectedSeconds}
                 style={styles.picker}
                 onValueChange={(itemValue) => setSelectedSeconds(itemValue)}
               >
-                {[...Array(60).keys()].map((i) => (
+                {(projectCategory === 'Shorts'
+                  ? [...Array(59).keys()].slice(1) // From 1 to 59 seconds
+                  : [...Array(60).keys()] // From 0 to 59 seconds
+                ).map((i) => (
                   <Picker.Item key={i} label={`${i} sec`} value={`${i}`} />
                 ))}
               </Picker>
@@ -98,6 +125,7 @@ const PromptInput = ({ onSend }) => {
     </View>
   );
 };
+
 
 const createStyles = (colors) => StyleSheet.create({
   container: {

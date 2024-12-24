@@ -13,6 +13,9 @@ const VideoPlayer = ({ videoSource }) => {
   const [duration, setDuration] = useState(0);
   const videoRef = useRef(null);
   const [colors] = useColorContext();
+
+  
+
   const styles = createStyles(colors);
 
   const handlePlayPause = () => {
@@ -23,7 +26,7 @@ const VideoPlayer = ({ videoSource }) => {
     }
     setIsPlaying(!isPlaying);
     setShowIcon(true);
-    setTimeout(() => setShowIcon(false), 500); // Hide icon after 0.5 seconds
+    setTimeout(() => setShowIcon(false), 500);
   };
 
   const handleSliderValueChange = async (value) => {
@@ -34,14 +37,9 @@ const VideoPlayer = ({ videoSource }) => {
 
   return (
     <View style={styles.container}>
-      {loading && (
-        <ActivityIndicator
-          size="large"
-          color="#fff"
-          style={styles.loading}
-        />
-      )}
-      <View style={styles.videoContainer} onTouchEnd={handlePlayPause}>
+      {/* Video */}
+      <TouchableOpacity style={styles.videoContainer} onPress={handlePlayPause} activeOpacity={0.9}>
+        {loading && <ActivityIndicator size="large" color="#fff" style={styles.loading} />}
         <Video
           ref={videoRef}
           source={{ uri: videoSource }}
@@ -51,7 +49,7 @@ const VideoPlayer = ({ videoSource }) => {
             setDuration(status.durationMillis);
           }}
           onError={(e) => console.error(e)}
-          resizeMode="cover"
+          resizeMode="contain"
           shouldPlay={false}
           onPlaybackStatusUpdate={(status) => {
             setPosition(status.positionMillis);
@@ -60,16 +58,20 @@ const VideoPlayer = ({ videoSource }) => {
             }
           }}
         />
+
+        {/* Play/Pause Button */}
         {showIcon && (
           <View style={styles.playPauseButton}>
             <MaterialIcons
               name={isPlaying ? "pause" : "play-arrow"}
-              size={32}
+              size={50}
               color="#fff"
             />
           </View>
         )}
-      </View>
+      </TouchableOpacity>
+
+      {/* Progress Slider */}
       <Slider
         style={styles.slider}
         minimumValue={0}
@@ -77,58 +79,49 @@ const VideoPlayer = ({ videoSource }) => {
         value={position / duration}
         onValueChange={handleSliderValueChange}
         minimumTrackTintColor={colors.theme}
-        maximumTrackTintColor="#fff"
+        maximumTrackTintColor="#888"
         thumbTintColor={colors.theme}
       />
     </View>
   );
 };
 
-const createStyles = (colors) => StyleSheet.create({
-  container: {
-    marginVertical: 20,
-    overflow: 'hidden',
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.theme,
-    width: '100%',
-    aspectRatio: 16 / 9,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loading: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -25 }, { translateY: -25 }],
-  },
-  videoContainer: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  video: {
-    width: '100%',
-    height: '100%',
-  },
-  playPauseButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -16 }, { translateY: -16 }],
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 10,
-    borderRadius: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  slider: {
-    width: '100%',
-    position: 'absolute',
-    bottom: 10,
-  },
-});
+const createStyles = (colors ) =>
+  StyleSheet.create({
+    container: {
+      width: '100%',
+      aspectRatio: 16 / 9,
+      backgroundColor: '#000',
+      overflow: 'hidden',
+    },
+    videoContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    video: {
+      width: '100%',
+      height: '100%',
+    },
+    loading: {
+      position: 'absolute',
+    },
+    playPauseButton: {
+      position: 'absolute',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    slider: {
+      position: 'absolute',
+      bottom: 0,
+      width: '100%',
+      height: 20,
+      zIndex: 10,
+    },
+  });
 
 export default VideoPlayer;

@@ -1,9 +1,14 @@
 const getVideosAndDurations = require('../Models/PexelsVideo');
 
-const getPexelsVideos = async (query, targetDuration) => {
+const getPexelsVideos = async (query, targetDuration , projectCategory) => {
     console.log("Query:", query);
     console.log("Getting Pexels Videos...");
-    const allUrls = await getVideosAndDurations(query, 30 , 16 / 9, 0.8);
+    let allUrls;
+    if(projectCategory === 'Shorts'){
+        allUrls = await getVideosAndDurations(query, 30 , 9 / 16, 0.8);
+    }else{
+        allUrls = await getVideosAndDurations(query, 30 , 16 / 9, 0.8);
+    }
     allUrls.sort((a, b) => a.duration - b.duration);
 
     let selectedVideos = [];

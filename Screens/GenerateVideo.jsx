@@ -10,7 +10,7 @@ import Thumbnail from '../Components/Thumbnail';
 import VideoInfo from '../Components/VideoInfo';
 import VideoPlayer from '../Components/Video';
 
-import generateInfo from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/InfoGenerator';
+import InfoGenerator from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/InfoGenerator';
 import generateThumbnail from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/ThumbnailGenerator';
 import getPexelsVideos from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/MediaGeneration';
 import concatVideos from '../VideoGenerationCode/JavaScriptReact/Models/Concat';
@@ -21,27 +21,25 @@ import { useColorContext } from '../assets/Variables/colors';
 import { GENTUBE_API_KEY } from '@env'
 
 
-export default function GenerateVideo() {
-
-  
+export default function GenerateVideo({route}) {
   const [colors] = useColorContext();
   const styles = createStyles(colors);
   const [duration, setDuration] = useState(30);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
-  // const [videoData, setVideoData] = useState(null);
-  const [videoData, setVideoData] = useState({
-    title: "IS this entititled to be shown to the user?",
-    description: "Generating a long long description that is not needed to be shown to the user and is just for testing purposes so that the user can see the progress of the video generation...",
-    id: null,
-  });
+  const [videoData, setVideoData] = useState(null);
+  
   const [isThumbnailGenerated, setIsThumbnailGenerated] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
+
+
   const [videoStatus, setVideoStatus] = useState("Generating Video...");
   const [videoSource, setVideoSource] = useState(null);
+
   const rotation = useRef(new Animated.Value(0)).current;
   const apiUrl = "https://api-for-test.vercel.app/";
-  
+  const { projectCategory  , initialPrompt} = route.params; 
+
 
   const toggleSidebar = () => {
     const toValue = isSidebarOpen ? 0 : 1;
@@ -89,6 +87,10 @@ export default function GenerateVideo() {
     const videoData = await generateVideoInfo(prompt , duration);
     console.log("Video Data:", videoData);
     const videoId = await uploadVideoData(videoData.title, videoData.description, videoData.duration, videoData.oneWord, videoData.createdAt);
+
+    const addVideoCategory = await updateCollection(videoId, "category", projectCategory)
+    console.log("\n\n"+addVideoCategory.message);
+
     
     setVideoStatus('Generating Thumbnail...');
     const thumbnailUrl = await generateThumbnail(videoData.oneWord);
@@ -102,7 +104,7 @@ export default function GenerateVideo() {
     console.log("\n\n"+addThumbnail.message); 
 
     setVideoStatus('Generating Videos...');
-    const urls = await getPexelsVideos(videoData.oneWord.trim(), videoData.duration);
+    const urls = await getPexelsVideos(videoData.oneWord.trim(), videoData.duration , projectCategory);
     console.log("Videos:", urls);
     const addUrls = await updateCollection(videoId, "video_urls", urls)
     console.log("\n\n"+addUrls.message);
@@ -115,10 +117,10 @@ export default function GenerateVideo() {
 
     setVideoStatus('Compiling Videos...');
     
-    const finalVideoUrl = await concatVideos(urls);
+    const finalVideoUrl = await concatVideos(urls , projectCategory);
     console.log("Final Video URL: " + finalVideoUrl);
 
-    const addFinalVideoUrl = await updateCollection(videoId, "video_urls", finalVideoUrl);
+    const addFinalVideoUrl = await updateCollection(videoId, "FinalURL", finalVideoUrl);
     console.log("\n\n" + addFinalVideoUrl.message);
 
     setVideoSource(finalVideoUrl);
@@ -129,6 +131,7 @@ export default function GenerateVideo() {
 
   };
 
+  
 
 
   const generateVideoInfo = async (prompt , duration) => {
@@ -142,7 +145,7 @@ export default function GenerateVideo() {
     setVideoStatus('Generating Video Information...');
 
     try {
-      const videoInfo = await generateInfo(prompt, duration); 
+      const videoInfo = await InfoGenerator.generateInfo(prompt, duration); 
       const newVideoData = {
         prompt: prompt,
         title: videoInfo["Video Title"],
@@ -236,9 +239,6 @@ export default function GenerateVideo() {
   };
 
   
-  
-
- 
   const dummyGenerateVideo = async (prompt) => {
     setVideoStatus('Initializing...');
     setVideoSource(null);
@@ -275,7 +275,8 @@ export default function GenerateVideo() {
     // Step 6: Transcribe Audio
     setVideoStatus('Transcribing Audio...');
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const dummyFilePath = require('../assets/Videos/concat.mp4');
+    // const dummyFilePath = require('../assets/Videos/concat.mp4');
+    const dummyFilePath = "https://res.cloudinary.com/defyovyob/video/upload/v1734363387/vxyfyasg1gnjxxiyosv4.mp4";
     console.log('File path:', dummyFilePath);
     setVideoSource({ uri: dummyFilePath });
 
@@ -288,19 +289,23 @@ export default function GenerateVideo() {
 
   return (
     <>
-      <UpperNavigation toggleSidebar={toggleSidebar} title={"Generate Video"} />
+      <UpperNavigation toggleSidebar={toggleSidebar} title={`Generate ${projectCategory}`} />
       <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
 
       <ScrollView style={styles.container} >
         {videoData ? (
           <>
-            <Text style={styles.videoStatus}>{videoStatus}</Text>
-            <ProgressBar time={duration} />
             {videoSource ? (
-              <VideoPlayer videoSource={videoSource} />
+              <VideoPlayer videoSource={videoSource} projectCategory={projectCategory}/>
             ) : (
               <Thumbnail isGenerating={!isThumbnailGenerated} thumbnailUrl={thumbnailUrl} />
             )}
+            <View style={{padding:15}}>
+              <Text style={styles.videoStatus}>{videoStatus}</Text>
+              <ProgressBar time={duration} />
+            </View>
+
+
             <VideoInfo 
               title={videoData.title}
               description={videoData.description}
@@ -322,7 +327,7 @@ export default function GenerateVideo() {
       </ScrollView>
 
       <View style={styles.promptContainer}>
-        <PromptInput onSend={(prompt , duration) => generateVideo(prompt , duration)} /> 
+        <PromptInput onSend={(prompt , duration) => generateVideo(prompt , duration)} projectCategory={projectCategory} initialPrompt={initialPrompt} /> 
       </View>
 
       <BottomNavigation />
@@ -337,7 +342,7 @@ const createStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.lightGray,
   },
   container: {
-    padding: 15,
+    // padding: 15,
     display:'flex',
     backgroundColor: colors.white,
   },

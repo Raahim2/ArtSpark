@@ -27,7 +27,7 @@ export default function BottomNavigation({ target }) {
 
         {/* Center Floating Button */}
         <View style={styles.centerButtonContainer}>
-          <TouchableOpacity style={styles.centerButton} onPress={() => navigation.navigate('New', { screen: 'New' })}>
+          <TouchableOpacity style={styles.centerButton} onPress={() => navigation.navigate('GenerateVideo', { screen: 'GenerateVideo', projectCategory: 'Video' })}>
             <View style={styles.centerButtonIcon}>
               <Ionicons name="add" size={24} color={colors.white} />
             </View>

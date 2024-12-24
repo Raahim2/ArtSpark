@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Button, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useColorContext } from '../assets/Variables/colors';
 import UploadBtn from './UploadVideo';
+import { ACCESS_TOCKEN } from '@env';
 
 export default function VideoInfo({ title, description }) {
   const [visibility, setVisibility] = useState('Private');
@@ -72,15 +73,20 @@ export default function VideoInfo({ title, description }) {
       </TouchableOpacity>
 
 
-      {/* Next Button */}
-      <UploadBtn />
+      {/* Upload Button */}
+      <UploadBtn
+  accessToken={ACCESS_TOCKEN}
+  videoUrl="https://www.w3schools.com/html/mov_bbb.mp4"
+  title="Canvas GPT"
+  description="This is a test video"
+/>
     </View>
   );
 }
 
 const createStyles = (colors) => StyleSheet.create({
   container: {
-    padding: 5,
+    padding: 15,
   },
   header: {
     fontSize: 20,

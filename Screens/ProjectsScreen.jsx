@@ -1,27 +1,65 @@
-import { StyleSheet, View, Text, Animated, StatusBar, FlatList, TextInput, TouchableOpacity, Dimensions } from 'react-native'
-import React, { useState, useRef } from 'react'
+import { StyleSheet, View, Animated } from 'react-native'
+import React, { useState, useRef , useEffect } from 'react'
+import { useColorContext } from '../assets/Variables/colors';
 import BottomNavigation from '../Components/BottomNavigation'
 import UpperNavigation from '../Components/UpperNavigation'
 import SideBar from '../Components/SideBar'
-import { useColorContext } from '../assets/Variables/colors';
-import { Ionicons } from '@expo/vector-icons';
-import Thumbnail from '../Components/Thumbnail';
 import Projects from '../Components/Projects';
-
-// Add this section here make the UI Exactly as shown in the image sont even change a single thing
+import SearchBar from '../Components/SearchBar';
+import FilterBar from '../Components/FilterBar';
+import { GENTUBE_API_KEY } from '@env';
 
 export default function ProjectsScreen() {
   const [colors] = useColorContext();
   const styles = createStyles(colors);
+  const [filteredProjects, setFilteredProjects] = useState([]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
 
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const [dateModifiedDropdownOpen, setDateModifiedDropdownOpen] = useState(false);
+  
 
-  const [selectedCategory, setSelectedCategory] = useState('Category');
-  const [selectedDateModified, setSelectedDateModified] = useState('Date modified');
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const apiUrl = 'https://api-for-test.vercel.app';  
+
+  const fetchProjects = async () => {
+    setLoading(true); 
+
+    try {
+      const response = await fetch(`${apiUrl}/MongoDB/GetProjects`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': GENTUBE_API_KEY,
+        },
+        body: JSON.stringify({})  
+      });
+      
+
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        setError(`Error Fetching Projects: ${errorMessage}`); // Set error state
+        setLoading(false); 
+        return;
+      }
+
+      const responseData = await response.json();
+      setProjects(responseData);
+      setFilteredProjects(responseData);
+      setLoading(false);  // Set loading to false after successful request
+
+    } catch (error) {
+      setError(`Error: ${error.message}`);  // Update error state if there's an exception
+      setLoading(false); // Set loading to false
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();  
+  }, []); 
+  
 
   const toggleSidebar = () => {
     const toValue = isSidebarOpen ? 0 : 1;
@@ -40,57 +78,27 @@ export default function ProjectsScreen() {
       <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
 
       <View style={styles.container}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search projects..."
-          placeholderTextColor={colors.text}
-        />
+        <SearchBar setFilteredProjects={setFilteredProjects} projects={projects} />
 
-        <View style={styles.filterBar}>
-          <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="options-outline" size={20} color={colors.text} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterButton} onPress={() => setCategoryDropdownOpen(!categoryDropdownOpen)}>
-            <Text style={styles.filterText}>{selectedCategory}</Text>
-            <Ionicons name="chevron-down-outline" size={16} color={colors.text} />
-          </TouchableOpacity>
-          {categoryDropdownOpen && (
-            <View style={styles.dropdown}>
-              <Text style={styles.dropdownItem} onPress={() => { setSelectedCategory('Category'); setCategoryDropdownOpen(false); }}>Category</Text>
-              <Text style={styles.dropdownItem} onPress={() => { setSelectedCategory('Video'); setCategoryDropdownOpen(false); }}>Video</Text>
-              <Text style={styles.dropdownItem} onPress={() => { setSelectedCategory('Short'); setCategoryDropdownOpen(false); }}>Short</Text>
-              <Text style={styles.dropdownItem} onPress={() => { setSelectedCategory('Post'); setCategoryDropdownOpen(false); }}>Post</Text>
-            </View>
-          )}
-          <TouchableOpacity style={styles.filterButton} onPress={() => setDateModifiedDropdownOpen(!dateModifiedDropdownOpen)}>
-            <Text style={styles.filterText}>{selectedDateModified}</Text>
-            <Ionicons name="chevron-down-outline" size={16} color={colors.text} />
-          </TouchableOpacity>
-          {dateModifiedDropdownOpen && (
-            <View style={styles.dropdown}>
-              <Text style={styles.dropdownItem} onPress={() => { setSelectedDateModified('Date modified'); setDateModifiedDropdownOpen(false); }}>Date modified</Text>
-              <Text style={styles.dropdownItem} onPress={() => { setSelectedDateModified('Today'); setDateModifiedDropdownOpen(false); }}>Today</Text>
-              <Text style={styles.dropdownItem} onPress={() => { setSelectedDateModified('This Week'); setDateModifiedDropdownOpen(false); }}>This Week</Text>
-              <Text style={styles.dropdownItem} onPress={() => { setSelectedDateModified('Last 30 days'); setDateModifiedDropdownOpen(false); }}>Last 30 days</Text>
-            </View>
-          )}
-        </View>
+        <FilterBar setFilteredProjects={setFilteredProjects} projects={projects} />
 
-        <Projects />
+        <View style={styles.projectsContainer}>
+            <Projects projects={filteredProjects} loading={loading} error={error} />
+        </View> 
 
 
-        
+
       </View>
 
       <BottomNavigation target={"Projects"} />
     </>
-  )
+  );
 }
 
 const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    padding: 5,
   },
   searchBar: {
     height: 40,
@@ -98,21 +106,20 @@ const createStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
-    marginBottom: 10,
-    marginHorizontal: 10,
+    marginHorizontal: 5,
     color: colors.text,
   },
   filterBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: 5,
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 8,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 5,
@@ -122,6 +129,7 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.text,
   },
   dropdown: {
+    margin: 5,
     position: 'absolute',
     top: 40,
     left: 0,
@@ -138,4 +146,12 @@ const createStyles = (colors) => StyleSheet.create({
     borderBottomColor: colors.border,
     color: colors.text,
   },
-})
+  projectsContainer: {
+    marginTop: 10, // Default margin for the projects section
+    marginBottom: 240,
+  },
+  dropdownOpen: {
+    marginTop: 170, // Add more space when dropdown is open
+  },
+  
+});

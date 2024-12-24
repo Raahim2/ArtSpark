@@ -1,73 +1,104 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Button, Alert } from 'react-native';
-import { useColorContext } from '../assets/Variables/colors';
-import { WEB_CLIENT_ID } from '@env';
+import React from 'react';
+import { Button, Alert } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
-const UploadBtn = ({ videoUrl }) => {
-  // 341302253948-lorag64035t2k103dcqi42r7nflvg7jv.apps.googleusercontent.com
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState('');
-  const [colors] = useColorContext();
+const UploadBtn = ({ videoUrl, accessToken, title = "Default Title", description = "Default Description" }) => {
+  const uploadVideo = async () => {
+    if (!videoUrl || !accessToken) {
+      Alert.alert("Error", "Missing video URL or access token.");
+      return;
+    }
 
-  const handleUpload = async () => {
-    setIsUploading(true);
-    setUploadStatus('Uploading...');
     try {
-      const response = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?part=snippet,status', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${WEB_CLIENT_ID}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          snippet: {
-            title: 'Uploaded Video',
-            description: 'Video uploaded from Cloudinary URL',
-            tags: ['video', 'upload'],
-            categoryId: '22',
-          },
-          status: {
-            privacyStatus: 'public',
-          },
-          videoUrl: videoUrl,
-        }),
-      });
+      console.log("Step 1: Downloading video from URL");
+      const videoFileUri = `${FileSystem.cacheDirectory}video.mp4`;
+      const videoDownload = await FileSystem.downloadAsync(videoUrl, videoFileUri);
 
-      if (!response.ok) {
-        const errorMessage = await response.text();
-        throw new Error(errorMessage);
+      console.log("Step 2: Starting resumable upload session");
+      const metadata = {
+        snippet: {
+          title: title,
+          description: description,
+          tags: ["sample", "video"],
+          categoryId: "22", // 22 = People & Blogs
+        },
+        status: {
+          privacyStatus: "private", // or "public", "unlisted"
+        },
+      };
+
+      const startUploadResponse = await fetch(
+        "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(metadata),
+        }
+      );
+
+      if (!startUploadResponse.ok) {
+        const errorText = await startUploadResponse.text();
+        console.error("Failed to start resumable upload:", errorText);
+        Alert.alert("Error", "Failed to start upload session. Please try again.");
+        return;
       }
 
-      const data = await response.json();
-      setUploadStatus('Upload Successful!');
-      Alert.alert('Success', 'Video uploaded successfully to YouTube!', [{ text: 'OK' }]);
+      const uploadUrl = startUploadResponse.headers.get("Location");
+
+      console.log("Step 3: Uploading video in chunks");
+
+      const videoFileStat = await FileSystem.getInfoAsync(videoFileUri, { size: true });
+      const videoFileSize = videoFileStat.size;
+
+      // Read the video file as binary
+      const videoFileData = await FileSystem.readAsStringAsync(videoFileUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      // Convert the Base64 data to binary (Uint8Array)
+      const videoData = Uint8Array.from(atob(videoFileData), (c) => c.charCodeAt(0));
+
+      // Initialize variables for chunked upload
+      const chunkSize = 5 * 1024 * 1024; // 5MB chunk size
+      let offset = 0;
+
+      // Upload the video in chunks
+      while (offset < videoFileSize) {
+        const chunk = videoData.slice(offset, offset + chunkSize);
+
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Length": chunk.byteLength.toString(),
+            "Content-Range": `bytes ${offset}-${offset + chunk.byteLength - 1}/${videoFileSize}`,
+            "Content-Type": "video/mp4",
+          },
+          body: chunk,
+        });
+
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          console.error("Upload chunk error:", errorText);
+          Alert.alert("Error", "Failed to upload video chunk. Please try again.");
+          return;
+        }
+
+        offset += chunkSize;
+        console.log(`Uploaded chunk ${offset} of ${videoFileSize}`);
+      }
+
+      console.log("Step 4: Handling API response");
+      Alert.alert("Success", "Video uploaded successfully!", [{ text: "OK" }]);
+
     } catch (error) {
-      console.error('Error uploading video:', error);
-      setUploadStatus('Upload Failed');
-      Alert.alert('Error', `Failed to upload video: ${error.message}`, [{ text: 'OK' }]);
-    } finally {
-      setIsUploading(false);
+      console.error("Video upload failed:", error);
+      Alert.alert("Error", "Failed to upload video. Please try again.");
     }
   };
 
-  return (
-    <View style={styles.button}>
-      <Button onPress={handleUpload} title="Upload to YouTube" color={colors.theme} disabled={isUploading} />
-      {uploadStatus ? <Text>{uploadStatus}</Text> : null}
-    </View>
-  );
+  return <Button title="Upload Video" onPress={uploadVideo} />;
 };
 
-const styles = StyleSheet.create({
-  button: {
-    marginBottom: 10,
-    paddingBottom: 20,
-    width: '100%',
-  },
-});
-
 export default UploadBtn;
-
-
-
-

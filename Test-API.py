@@ -162,7 +162,6 @@ def update_collection(project_id, key, value):
         print("An error occurred:", str(e))
         return None
 
-
 def concat_videos(project_id):
     api_url = "http://api-for-test.vercel.app/concatVideos"
     api_key = os.getenv("GENTUBE_API_KEY")  # Ensure your environment variable is set or replace with your actual API key
@@ -227,9 +226,7 @@ def check_task_status(task_id):
         print(f"An error occurred while checking task status: {e}")
         return None
 
-
-
-def delete_all():
+def delete_all_mongo_data():
     api_url = "http://api-for-test.vercel.app/MongoDB/deleteAllData"
 
 
@@ -251,4 +248,69 @@ def delete_all():
         return None
 
 
-# delete_all()
+def test_get_projects(api_key):
+    api_url = "https://api-for-test.vercel.app/MongoDB/GetProjects"
+    headers = {
+        "Authorization": api_key,
+        "Content-Type": "application/json"
+    }
+    body = {
+        "filter_key": "project_id",
+        "filter_value": "bd51ddea-9e3f-4481-ba24-c57ca3942680"
+    }  # Add any required fields the server expects
+
+
+    try:
+        response = requests.post(api_url, headers=headers, json=body)
+
+        if response.status_code == 200:
+            print("Response Status Code: 200")
+            print(response.json())
+            return response.json()  # Attempt to parse JSON if status is 200
+        elif response.status_code == 400:
+            return {"error": "Bad Request", "raw_response": response.text}
+        elif response.status_code == 403:
+            return {"error": "Forbidden", "raw_response": response.text}
+        else:
+            return {"error": f"Unexpected status code: {response.status_code}", "raw_response": response.text}
+    except requests.exceptions.JSONDecodeError:
+        return {"error": "Invalid JSON response", "raw_response": response.text}
+    except Exception as e:
+        return {"error": "Request failed", "message": str(e)}
+
+
+def delete_all_cloud_data():
+    import cloudinary
+    import cloudinary.api
+
+    cloudinary.config(
+        cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+        api_key=os.environ.get("CLOUDINARY_API_KEY"),
+        api_secret=os.environ.get("CLOUDINARY_API_SECRET")
+    )
+
+    try:
+        # Initialize variables for pagination
+        next_cursor = None
+        
+        while True:
+            # Fetch resources (files) from Cloudinary
+            resources = cloudinary.api.resources(max_results=500, next_cursor=next_cursor)
+            
+            # Extract the public IDs of resources
+            public_ids = [resource['public_id'] for resource in resources['resources']]
+            
+            if public_ids:
+                # Delete resources
+                cloudinary.api.delete_resources(public_ids)
+                print(f"Deleted {len(public_ids)} files.")
+            
+            # Check if there are more resources to fetch
+            next_cursor = resources.get('next_cursor')
+            if not next_cursor:
+                break  # Exit if no more resources
+            
+        print("All files deleted successfully.")
+    except Exception as e:
+        print(f"Error: {e}")
+
