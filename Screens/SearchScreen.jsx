@@ -5,7 +5,8 @@ import UpperNavigation from '../Components/UpperNavigation'
 import SideBar from '../Components/SideBar'
 import { useColorContext } from '../assets/Variables/colors';
 
-export default function SearchScreen() {
+export default function SearchScreen({ route }) {
+  const { username } = route.params;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
   const [colors, setColors] = useColorContext();
@@ -35,7 +36,7 @@ export default function SearchScreen() {
     <>
       <UpperNavigation toggleSidebar={toggleSidebar} title={"Search"} />
 
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
+      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username}/>
       <View style={styles.container}>
         <Text style={styles.heading}>Search</Text>
 
@@ -44,7 +45,7 @@ export default function SearchScreen() {
       </TouchableOpacity>
 
       </View>
-      <BottomNavigation target={"Search"} />
+      <BottomNavigation target={"Search"} username={username}/>
     </>
   )
 }

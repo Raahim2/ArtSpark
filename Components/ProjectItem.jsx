@@ -3,12 +3,14 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
-const ProjectItem = ({ title, type, imageSource, date, width, id }) => {
+const ProjectItem = ({ title, type, imageSource, date, width, id , username}) => {
   const navigation = useNavigation();
 
   const handlePress = () => {
     navigation.navigate('VideoDetails', {
-      videoId: id
+      videoId: id,
+      username: username
+
     });
   };
 

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Animated }
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useColorContext } from '../assets/Variables/colors';
 
-const SideBar = ({ isOpen, toggleSidebar }) => {
+const SideBar = ({ isOpen, toggleSidebar , username }) => {
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
   const [colors] = useColorContext();
   const styles = createStyles(colors);
@@ -33,10 +33,10 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
       <ScrollView style={styles.sidebarContainer}>
       <View style={styles.profileContainer}>
         <Image
-          source={{ uri: 'https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/perplexity-ai-icon.png' }}
+          source={require('../assets/Images/logo.png')}
           style={styles.profileImage}
         />
-        <Text style={styles.username}>Perplexity AI</Text>
+        <Text style={styles.username}>{username}</Text>
       </View>
 
       <TouchableOpacity style={styles.closeButton} onPress={handleToggleSidebar}>

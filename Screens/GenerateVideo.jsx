@@ -21,7 +21,7 @@ import { useColorContext } from '../assets/Variables/colors';
 import { GENTUBE_API_KEY } from '@env'
 
 
-export default function GenerateVideo({route}) {
+export default function GenerateVideo({route }) {
   const [colors] = useColorContext();
   const styles = createStyles(colors);
   const [duration, setDuration] = useState(30);
@@ -38,7 +38,7 @@ export default function GenerateVideo({route}) {
 
   const rotation = useRef(new Animated.Value(0)).current;
   const apiUrl = "https://gentube.vercel.app/";
-  const { projectCategory  , initialPrompt} = route.params; 
+  const { username , userid , projectCategory  , initialPrompt} = route.params; 
 
 
   const toggleSidebar = () => {
@@ -76,6 +76,8 @@ export default function GenerateVideo({route}) {
   };
 
 
+
+
   const generateVideo = async (prompt , duration) => {
     console.log(`Started Video Generation for Prompt : ${prompt} And Duration ${duration}` );
     setVideoStatus('Initializing...');  
@@ -86,7 +88,8 @@ export default function GenerateVideo({route}) {
     
     const videoData = await generateVideoInfo(prompt , duration);
     console.log("Video Data:", videoData);
-    const videoId = await uploadVideoData(videoData.title, videoData.description, videoData.duration, videoData.oneWord, videoData.createdAt);
+    const videoId = await uploadVideoData(videoData.title, videoData.description, videoData.duration, videoData.oneWord, videoData.createdAt , userid);
+
 
     const addVideoCategory = await updateCollection(videoId, "category", projectCategory)
     console.log("\n\n"+addVideoCategory.message);
@@ -165,7 +168,7 @@ export default function GenerateVideo({route}) {
 
   }
 
-  const uploadVideoData = async (title, description, duration, oneWord ,createdAt) => {
+  const uploadVideoData = async (title, description, duration, oneWord ,createdAt , userid) => {
     console.log("Uploading Video Data...\n\n");
     setVideoStatus('Uploading Video Data...');
 
@@ -182,6 +185,7 @@ export default function GenerateVideo({route}) {
           duration: duration,
           oneWord: oneWord,
           createdAt: createdAt,
+          userid: userid,
         }),
       });
 
@@ -290,7 +294,7 @@ export default function GenerateVideo({route}) {
   return (
     <>
       <UpperNavigation toggleSidebar={toggleSidebar} title={`Generate ${projectCategory}`} />
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
+      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username}/>
 
       <ScrollView style={styles.container} >
         {videoData ? (
@@ -330,7 +334,7 @@ export default function GenerateVideo({route}) {
         <PromptInput onSend={(prompt , duration) => generateVideo(prompt , duration)} projectCategory={projectCategory} initialPrompt={initialPrompt} /> 
       </View>
 
-      <BottomNavigation />
+      <BottomNavigation  username={username}/>
     </>
   );
 }

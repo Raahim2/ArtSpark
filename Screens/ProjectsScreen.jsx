@@ -9,7 +9,8 @@ import SearchBar from '../Components/SearchBar';
 import FilterBar from '../Components/FilterBar';
 import { GENTUBE_API_KEY } from '@env';
 
-export default function ProjectsScreen() {
+export default function ProjectsScreen({ route }) {
+  const { username } = route.params;
   const [colors] = useColorContext();
   const styles = createStyles(colors);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -75,7 +76,7 @@ export default function ProjectsScreen() {
     <>
       <UpperNavigation toggleSidebar={toggleSidebar} title={"Projects"} />
 
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
+      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username}/>
 
       <View style={styles.container}>
         <SearchBar setFilteredProjects={setFilteredProjects} projects={projects} />
@@ -90,7 +91,7 @@ export default function ProjectsScreen() {
 
       </View>
 
-      <BottomNavigation target={"Projects"} />
+      <BottomNavigation target={"Projects"} username={username}/>
     </>
   );
 }

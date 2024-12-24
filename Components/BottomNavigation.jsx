@@ -4,22 +4,23 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useColorContext } from '../assets/Variables/colors';
 
-export default function BottomNavigation({ target }) {
+export default function BottomNavigation({ target  , username , userid }) {
   const navigation = useNavigation();
   const [colors] = useColorContext();
   const styles = createStyles(colors);
+
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.navbar}>
         {/* Home Button */}
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Home', { screen: 'Home' })}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Home', { screen: 'Home', username: username , userid: userid })}>
           <Ionicons name="home" size={24} color={target === 'Home' ? colors.theme : colors.light} />
           <Text style={target === 'Home' ? styles.navTextActive : styles.navTextInactive}>Home</Text>
         </TouchableOpacity>
 
         {/* Projects Button */}
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Projects', { screen: 'Projects' })}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Projects', { screen: 'Projects', username: username , userid: userid })}>
           <Ionicons name="folder" size={24} color={target === 'Projects' ? colors.theme : colors.light} />
           <Text style={target === 'Projects' ? styles.navTextActive : styles.navTextInactive}>Projects</Text>
         </TouchableOpacity>
@@ -27,7 +28,7 @@ export default function BottomNavigation({ target }) {
 
         {/* Center Floating Button */}
         <View style={styles.centerButtonContainer}>
-          <TouchableOpacity style={styles.centerButton} onPress={() => navigation.navigate('GenerateVideo', { screen: 'GenerateVideo', projectCategory: 'Video' })}>
+          <TouchableOpacity style={styles.centerButton} onPress={() => navigation.navigate('GenerateVideo', { screen: 'GenerateVideo', projectCategory: 'Video', username: username , userid: userid })}>
             <View style={styles.centerButtonIcon}>
               <Ionicons name="add" size={24} color={colors.white} />
             </View>
@@ -35,14 +36,14 @@ export default function BottomNavigation({ target }) {
         </View>
 
         {/* Search Button */}
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Search', { screen: 'Search' })}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Search', { screen: 'Search', username: username , userid: userid })}>
           <Ionicons name="search" size={24} color={target === 'Search' ? colors.theme : colors.light} />
           <Text style={target === 'Search' ? styles.navTextActive : styles.navTextInactive}>Search</Text>
         </TouchableOpacity>
 
         
         {/* Settings Button */}
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Settings', { screen: 'Settings' })}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Settings', { screen: 'Settings', username: username , userid: userid   })}>
           <Ionicons name="settings" size={24} color={target === 'Settings' ? colors.theme : colors.light} />
           <Text style={target === 'Settings' ? styles.navTextActive : styles.navTextInactive}>Settings</Text>
         </TouchableOpacity>

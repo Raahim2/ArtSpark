@@ -107,6 +107,7 @@ def upload_video_data():
         duration = request_data.get("duration")
         one_word = request_data.get("oneWord")
         created_at = request_data.get("createdAt")
+        userid = request_data.get("userid")
 
         collection = db["Projects"]
         project_data = {
@@ -115,7 +116,8 @@ def upload_video_data():
             "description": description,
             "duration": duration,
             "oneWord": one_word,
-            "createdAt": created_at
+            "createdAt": created_at,
+            "userid": userid
         }
 
         collection.insert_one(project_data)

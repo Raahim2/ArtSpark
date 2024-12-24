@@ -23,7 +23,8 @@ const FoldableSection = ({ title, children }) => {
     );
 };
 
-const SettingsScreen = () => {
+const SettingsScreen = ({ route }) => {
+    const { username } = route.params;
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const sidebarAnimation = useRef(new Animated.Value(0)).current;
     const [appTheme, setAppTheme] = useState('Light');
@@ -71,7 +72,7 @@ const SettingsScreen = () => {
     return (
         <>
             <UpperNavigation toggleSidebar={toggleSidebar} title={"Settings"} />
-            <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
+            <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username}/>
 
             <ScrollView style={styles.container}>
                 <FoldableSection title="Customization Options">
@@ -113,7 +114,7 @@ const SettingsScreen = () => {
             </ScrollView>
 
      
-            <BottomNavigation target="Settings" />
+            <BottomNavigation target="Settings"  username={username}/>
 
 
         </>

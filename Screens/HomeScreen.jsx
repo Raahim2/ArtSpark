@@ -16,7 +16,7 @@ import { GENTUBE_API_KEY } from '@env';
 
 
 
-export default function HomeScreen() {
+export default function HomeScreen({ route }) {
   const navigation = useNavigation();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,9 @@ export default function HomeScreen() {
   const styles = createStyles(colors);
   const apiUrl = 'https://gentube.vercel.app';  // Replace with your actual Vercel URL
 
+  const { username , userid } = route.params;
 
+  
   const fetchProjects = async () => {
     setLoading(true); // Set loading to true before the request
 
@@ -87,8 +89,8 @@ export default function HomeScreen() {
   return (
     <>
       {/* <VideoPlayer videoSource={"https://res.cloudinary.com/defyovyob/video/upload/v1734363387/vxyfyasg1gnjxxiyosv4.mp4"}  /> */}
-      <UpperNavigation toggleSidebar={toggleSidebar} title={"Home"} />
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
+      <UpperNavigation toggleSidebar={toggleSidebar} title={"Home"}  />
+      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username} userid={userid} />
 
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
@@ -96,16 +98,16 @@ export default function HomeScreen() {
 
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 }}>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video', username: username, userid: userid })}>
               <Icon iconName="videocam" label="Video" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts' })}>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts', username: username, userid: userid })}>
               <Icon iconName="film" label="Shorts" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Post' })}>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Post', username: username, userid: userid })}>
               <Icon iconName="people" label="Post" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Thumbnail' })}>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Thumbnail', username: username, userid: userid })}>
               <Icon iconName="image" label="Thumbnail" />
             </TouchableOpacity>
           </View>
@@ -115,7 +117,7 @@ export default function HomeScreen() {
           <View style={styles.mobileVideosSection}>
             <View style={styles.mobileVideosHeader}>
               <Text style={styles.mobileVideosTitle}>Recent Videos</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Projects')}>
+              <TouchableOpacity onPress={() => navigation.navigate('Projects', { username: username, userid: userid })}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
             </View>
@@ -142,13 +144,15 @@ export default function HomeScreen() {
                           imageSource={{ uri: project.thumbnail_url }}
                           date={project.createdAt}
                           id={project.project_id}
+                          username={username}
+                          userid={userid}
                         />
                       ))
                     ) : (
                       <Text style={styles.noProjectsText}>No projects found</Text>
                     )}
                       <View style={styles.addButton}>
-                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
+                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video', username: username, userid: userid })}>
                             <Icon iconName="add" size={50} />
                         </TouchableOpacity>
                       </View>
@@ -160,7 +164,7 @@ export default function HomeScreen() {
           <View style={styles.mobileVideosSection}>
             <View style={styles.mobileVideosHeader}>
               <Text style={styles.mobileVideosTitle}>Recent Shorts</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Projects')}>
+              <TouchableOpacity onPress={() => navigation.navigate('Projects', { username: username, userid: userid })}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
             </View>
@@ -168,6 +172,8 @@ export default function HomeScreen() {
                   <ActivityIndicator size="large" color="#0000ff" />
                 ) : error ? (
                   <ProjectItem
+                      username={username}
+                      userid={userid}
                       width={170}
                       title="Error"
                       type={error}
@@ -186,13 +192,15 @@ export default function HomeScreen() {
                           imageSource={{ uri: project.thumbnail_url }}
                           date={project.createdAt}
                           id={project.project_id}
+                          username={username}
+                          userid={userid}
                         />
                       ))
                     ) : (
                       <Text style={styles.noProjectsText}>No projects found</Text>
                     )}
                       <View style={styles.addButton}>
-                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts' })}>
+                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts', username: username, userid: userid })}>
                             <Icon iconName="add" size={50} />
                         </TouchableOpacity>
                       </View>
@@ -210,7 +218,7 @@ export default function HomeScreen() {
         </ScrollView>
       </SafeAreaView>
       
-      <BottomNavigation target={'Home'}/>
+      <BottomNavigation target={'Home'} username={username} userid={userid}/>
     </>
   );
 }

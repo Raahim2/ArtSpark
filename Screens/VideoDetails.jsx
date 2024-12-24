@@ -10,6 +10,7 @@ import SideBar from '../Components/SideBar';
 import { useNavigation } from '@react-navigation/native';
 
 export default function VideoDetails({ route }) {
+  const { username } = route.params;
   const [colors] = useColorContext();
   const styles = createStyles(colors);
   const navigation = useNavigation();
@@ -199,7 +200,7 @@ export default function VideoDetails({ route }) {
   return (
     <>
       <UpperNavigation title={"Video Details"} toggleSidebar={toggleSidebar} />
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
+      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username}/>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {project?.FinalURL && (
@@ -288,7 +289,7 @@ export default function VideoDetails({ route }) {
         </View>
         <View style={styles.bottomMargin} />
       </ScrollView>
-      <BottomNavigation />
+      <BottomNavigation username={username}/>
     </>
   );
 }
