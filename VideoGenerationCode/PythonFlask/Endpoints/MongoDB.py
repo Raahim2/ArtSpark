@@ -349,5 +349,44 @@ def create_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@MongoDb.route('/login', methods=['POST'])
+def login():
+    if request is None or request.get_json() is None:
+        return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
+        
+    provided_api_key = request.headers.get("Authorization")
+
+    if provided_api_key != gentube_api_key:
+        return jsonify({"message": "Invalid API Key"}), 403
+
+    try:
+        request_data = request.get_json()
+        username = request_data.get("username")
+        password = request_data.get("password")
+
+        if not username or not password:
+            return jsonify({"error": "Username and password must be provided"}), 400
+
+        # Find user in MongoDB
+        users_collection = db["Users"]
+        user = users_collection.find_one({"username": username})
+
+        if not user:
+            return jsonify({"error": "Invalid username or password"}), 401
+
+        # Check password
+        if bcrypt.checkpw(password.encode('utf-8'), user['password']):
+            return jsonify({
+                "message": "Login successful",
+                "user_id": user['user_id'],
+                "username": user['username'],
+                "email": user['email']
+            }), 200
+        else:
+            return jsonify({"error": "Invalid username or password"}), 401
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 #####################
