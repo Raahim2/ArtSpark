@@ -6,8 +6,10 @@ import time
 
 dotenv.load_dotenv()
 
+BASE_URL = "https://gentube.vercel.app"
+
 def generate_thumbnail(project_id):
-    apiUrl = "https://api-for-test.vercel.app/generateThumbnail"
+    apiUrl = f"{BASE_URL}/generateThumbnail"
     apiKey = os.getenv("GENTUBE_API_KEY")
     
     headers = {
@@ -31,7 +33,7 @@ def generate_thumbnail(project_id):
         print("An error occurred:", str(e))
 
 def generate_video_step1(prompt, duration=20):
-    apiUrl = "https://api-for-test.vercel.app/generateVideo/Step1"
+    apiUrl = f"{BASE_URL}/generateVideo/Step1"
     apiKey = os.getenv("GENTUBE_API_KEY")
     
     headers = {
@@ -66,7 +68,7 @@ def generate_video_step1(prompt, duration=20):
         return None
 
 def upload_video_data(title, description, duration, oneword, created_at):
-    apiUrl = "https://api-for-test.vercel.app/uploadData"
+    apiUrl = f"{BASE_URL}/uploadData"
     apiKey = os.getenv("GENTUBE_API_KEY")
     
     headers = {
@@ -100,7 +102,7 @@ def upload_video_data(title, description, duration, oneword, created_at):
 def upload_image(base64_string):
     # This is a truncated example, use a valid base64 string for actual testing
 
-    apiUrl = "https://api-for-test.vercel.app/uploadImage"
+    apiUrl = f"{BASE_URL}/uploadImage"
     apiKey = os.getenv("GENTUBE_API_KEY")
     
     headers = {
@@ -133,7 +135,7 @@ def convert_image_to_base64(image_path):
     return base64_string
 
 def update_collection(project_id, key, value):
-    apiUrl = "https://api-for-test.vercel.app/updateCollection"
+    apiUrl = f"{BASE_URL}/updateCollection"
     apiKey = os.getenv("GENTUBE_API_KEY")
     
     headers = {
@@ -163,7 +165,7 @@ def update_collection(project_id, key, value):
         return None
 
 def concat_videos(project_id):
-    api_url = "http://api-for-test.vercel.app/concatVideos"
+    api_url = f"{BASE_URL}/concatVideos"
     api_key = os.getenv("GENTUBE_API_KEY")  # Ensure your environment variable is set or replace with your actual API key
 
     headers = {
@@ -196,7 +198,7 @@ def concat_videos(project_id):
         return None
 
 def check_task_status(task_id):
-    api_url = f"http://api-for-test.vercel.app/task_status/{task_id}"
+    api_url = f"{BASE_URL}/task_status/{task_id}"
 
     try:
         while True:
@@ -227,8 +229,7 @@ def check_task_status(task_id):
         return None
 
 def delete_all_mongo_data():
-    api_url = "http://api-for-test.vercel.app/MongoDB/deleteAllData"
-
+    api_url = f"{BASE_URL}/MongoDB/deleteAllData"
 
     try:
         response = requests.post(api_url)
@@ -249,7 +250,7 @@ def delete_all_mongo_data():
 
 
 def test_get_projects(api_key):
-    api_url = "https://api-for-test.vercel.app/MongoDB/GetProjects"
+    api_url = f"{BASE_URL}/MongoDB/GetProjects"
     headers = {
         "Authorization": api_key,
         "Content-Type": "application/json"
@@ -314,3 +315,4 @@ def delete_all_cloud_data():
     except Exception as e:
         print(f"Error: {e}")
 
+print(test_get_projects(os.getenv("GENTUBE_API_KEY")))

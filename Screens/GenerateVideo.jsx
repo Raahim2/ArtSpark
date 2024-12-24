@@ -37,7 +37,7 @@ export default function GenerateVideo({route}) {
   const [videoSource, setVideoSource] = useState(null);
 
   const rotation = useRef(new Animated.Value(0)).current;
-  const apiUrl = "https://api-for-test.vercel.app/";
+  const apiUrl = "https://gentube.vercel.app/";
   const { projectCategory  , initialPrompt} = route.params; 
 
 

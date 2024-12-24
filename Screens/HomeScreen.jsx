@@ -25,7 +25,7 @@ export default function HomeScreen() {
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
   const [colors] = useColorContext();
   const styles = createStyles(colors);
-  const apiUrl = 'https://api-for-test.vercel.app';  // Replace with your actual Vercel URL
+  const apiUrl = 'https://gentube.vercel.app';  // Replace with your actual Vercel URL
 
 
   const fetchProjects = async () => {

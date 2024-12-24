@@ -22,7 +22,7 @@ export default function ProjectsScreen() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const apiUrl = 'https://api-for-test.vercel.app';  
+  const apiUrl = 'https://gentube.vercel.app';  
 
   const fetchProjects = async () => {
     setLoading(true); 

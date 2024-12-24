@@ -23,7 +23,7 @@ export default function VideoDetails({ route }) {
   const [editedTitle, setEditedTitle] = useState('');
   const [editedDescription, setEditedDescription] = useState('');
 
-  const apiUrl = "https://api-for-test.vercel.app/";
+  const apiUrl = "https://gentube.vercel.app";
 
   const fetchProject = async () => {
     setLoading(true);

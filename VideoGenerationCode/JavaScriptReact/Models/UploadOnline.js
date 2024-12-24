@@ -1,9 +1,10 @@
 
 import { GENTUBE_API_KEY } from '@env';
 
+const BASE_URL = "https://gentube.vercel.app";
 
 async function uploadImage(base64String) {
-  const apiUrl = "https://api-for-test.vercel.app/MongoDB/uploadImage";
+  const apiUrl = `${BASE_URL}/MongoDB/uploadImage`;
 
   const headers = {
     'Content-Type': 'application/json',
@@ -44,7 +45,7 @@ async function uploadImage(base64String) {
 async function uploadAudio(audioBuffer) {
   console.log("Uploading Audio to Database");
   
-  const apiUrl = "https://api-for-test.vercel.app/MongoDB/uploadAudio";
+  const apiUrl = `${BASE_URL}/MongoDB/uploadAudio`;
 
   const headers = {
     'Content-Type': 'application/json',
@@ -86,7 +87,7 @@ async function uploadAudio(audioBuffer) {
 async function uploadVideo(videoUrl) {
   console.log("Uploading Video to Database");
   
-  const apiUrl = "https://api-for-test.vercel.app/MongoDB/uploadVideo";
+  const apiUrl = `${BASE_URL}/MongoDB/uploadVideo`;
 
   const headers = {
     'Content-Type': 'application/json',
@@ -127,4 +128,3 @@ function isValidBase64(str) {
 }
 
 module.exports = { uploadImage , uploadAudio , uploadVideo};
-
