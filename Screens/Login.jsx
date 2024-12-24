@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ImageBackground, Text, TextInput, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';  // Import AsyncStorage
 import { GENTUBE_API_KEY } from '@env';
 
 const { height, width } = Dimensions.get('window');
@@ -10,6 +11,23 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
+  React.useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const storedUsername = await AsyncStorage.getItem('username');
+        const storedUserId = await AsyncStorage.getItem('userid');
+        
+        if (storedUsername && storedUserId) {
+          navigation.replace('Home');
+        }
+      } catch (error) {
+        console.log('Error checking login status:', error);
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -37,13 +55,19 @@ const LoginScreen = () => {
       const data = await response.json();
 
       if (response.status === 200) {
+        // Save the username in AsyncStorage
+        await AsyncStorage.setItem('username', username);
+        await AsyncStorage.setItem('userid', data.user_id);
+
+
+        // Show success alert and navigate to Home
         Alert.alert(
           "Success",
           "Login successful!",
           [
             {
               text: "OK",
-              onPress: () => navigation.navigate('Home', { username: username  , userid: data.user_id})
+              onPress: () => navigation.navigate('Home')
             }
           ]
         );

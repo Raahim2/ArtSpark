@@ -7,60 +7,76 @@ import SideBar from '../Components/SideBar'
 import Projects from '../Components/Projects';
 import SearchBar from '../Components/SearchBar';
 import FilterBar from '../Components/FilterBar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GENTUBE_API_KEY } from '@env';
 
-export default function ProjectsScreen({ route }) {
-  const { username } = route.params;
+export default function ProjectsScreen() {
   const [colors] = useColorContext();
   const styles = createStyles(colors);
   const [filteredProjects, setFilteredProjects] = useState([]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
-
-  
-
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const apiUrl = 'https://gentube.vercel.app';  
 
-  const fetchProjects = async () => {
-    setLoading(true); 
+  const [userid, setUserid] = useState('');
+  
+  const fetchProject = async (userid) => {
+    setLoading(true);
 
     try {
+      console.log("finding projects for userid: ", userid);
       const response = await fetch(`${apiUrl}/MongoDB/GetProjects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': GENTUBE_API_KEY,
         },
-        body: JSON.stringify({})  
+        body: JSON.stringify({
+          filter_key: "userid",
+          filter_value: userid
+        })
       });
-      
 
       if (!response.ok) {
         const errorMessage = await response.text();
-        setError(`Error Fetching Projects: ${errorMessage}`); // Set error state
-        setLoading(false); 
+        console.log(errorMessage);
         return;
       }
 
       const responseData = await response.json();
+      console.log(responseData.length);
+      // Since the API returns an array, get the first item
       setProjects(responseData);
       setFilteredProjects(responseData);
-      setLoading(false);  // Set loading to false after successful request
+      setLoading(false);
 
     } catch (error) {
-      setError(`Error: ${error.message}`);  // Update error state if there's an exception
-      setLoading(false); // Set loading to false
+      setError(`Error: ${error.message}`);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProjects();  
-  }, []); 
-  
+    const fetchUserid = async () => {
+      try {
+        const storedUserid = await AsyncStorage.getItem('userid');
+        if (storedUserid) {
+          setUserid(storedUserid);
+          fetchProject(storedUserid); // Fetch projects after getting userid
+        } else {
+          console.log('No username found');
+        }
+      } catch (error) {
+        console.error('Error retrieving username:', error);
+      }
+    };
+
+    fetchUserid();
+  }, []);
 
   const toggleSidebar = () => {
     const toValue = isSidebarOpen ? 0 : 1;
@@ -76,7 +92,7 @@ export default function ProjectsScreen({ route }) {
     <>
       <UpperNavigation toggleSidebar={toggleSidebar} title={"Projects"} />
 
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username}/>
+      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation}/>
 
       <View style={styles.container}>
         <SearchBar setFilteredProjects={setFilteredProjects} projects={projects} />
@@ -91,7 +107,7 @@ export default function ProjectsScreen({ route }) {
 
       </View>
 
-      <BottomNavigation target={"Projects"} username={username}/>
+      <BottomNavigation target={"Projects"}/>
     </>
   );
 }

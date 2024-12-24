@@ -9,14 +9,13 @@ import Icon from '../Components/Icon';
 import SuggestionPrompt from '../Components/SuggestionPrompt';
 import ProjectItem from '../Components/ProjectItem';
 import VideoPlayer from '../Components/Video';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native';
 import { Animated } from 'react-native';
 import { useColorContext } from '../assets/Variables/colors';
 import { GENTUBE_API_KEY } from '@env';
 
-
-
-export default function HomeScreen({ route }) {
+export default function HomeScreen() {
   const navigation = useNavigation();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,45 +25,59 @@ export default function HomeScreen({ route }) {
   const [colors] = useColorContext();
   const styles = createStyles(colors);
   const apiUrl = 'https://gentube.vercel.app';  // Replace with your actual Vercel URL
+  const [userid, setUserid] = useState('');
 
-  const { username , userid } = route.params;
+  useEffect(() => {
+    const fetchUserid = async () => {
+      try {
+        const storedUserid = await AsyncStorage.getItem('userid');
+        if (storedUserid) {
+          setUserid(storedUserid);
+          fetchProject(storedUserid); // Fetch projects after getting userid
+        } else {
+          console.log('No username found');
+        }
+      } catch (error) {
+        console.error('Error retrieving username:', error);
+      }
+    };
 
-  
-  const fetchProjects = async () => {
-    setLoading(true); // Set loading to true before the request
+    fetchUserid();
+  }, []);
+
+  const fetchProject = async (uid) => {
+    setLoading(true);
 
     try {
+      console.log("finding projects for userid: ", uid);
       const response = await fetch(`${apiUrl}/MongoDB/GetProjects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': GENTUBE_API_KEY,
         },
-        body: JSON.stringify({})  // Add an empty object or any required payload
+        body: JSON.stringify({
+          filter_key: "userid",
+          filter_value: uid
+        })
       });
-      
 
       if (!response.ok) {
         const errorMessage = await response.text();
-        setError(`Error Fetching Projects: ${errorMessage}`); // Set error state
-        setLoading(false); 
+        console.log(errorMessage);
         return;
       }
 
       const responseData = await response.json();
+      console.log(responseData.length);
       setProjects(responseData);
-      setLoading(false);  // Set loading to false after successful request
+      setLoading(false);
 
     } catch (error) {
-      setError(`Error: ${error.message}`);  // Update error state if there's an exception
-      setLoading(false); // Set loading to false
+      setError(`Error: ${error.message}`);
+      setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchProjects();  
-  }, []);
-
 
   const VideoProjects = projects.filter((project) => {
     const categoryMatch = project.category === 'Video';
@@ -86,28 +99,28 @@ export default function HomeScreen({ route }) {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+
+
   return (
     <>
-      {/* <VideoPlayer videoSource={"https://res.cloudinary.com/defyovyob/video/upload/v1734363387/vxyfyasg1gnjxxiyosv4.mp4"}  /> */}
-      <UpperNavigation toggleSidebar={toggleSidebar} title={"Home"}  />
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username} userid={userid} />
+      <UpperNavigation toggleSidebar={toggleSidebar} title={"Home"} />
+      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
 
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
           <WhatsNew />
 
-
           <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 }}>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video', username: username, userid: userid })}>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
               <Icon iconName="videocam" label="Video" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts', username: username, userid: userid })}>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts' })}>
               <Icon iconName="film" label="Shorts" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Post', username: username, userid: userid })}>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
               <Icon iconName="people" label="Post" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Thumbnail', username: username, userid: userid })}>
+            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
               <Icon iconName="image" label="Thumbnail" />
             </TouchableOpacity>
           </View>
@@ -117,7 +130,7 @@ export default function HomeScreen({ route }) {
           <View style={styles.mobileVideosSection}>
             <View style={styles.mobileVideosHeader}>
               <Text style={styles.mobileVideosTitle}>Recent Videos</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Projects', { username: username, userid: userid })}>
+              <TouchableOpacity onPress={() => navigation.navigate('Projects')}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
             </View>
@@ -131,7 +144,6 @@ export default function HomeScreen({ route }) {
                       imageSource={{ uri: 'https://miro.medium.com/v2/resize:fit:1400/1*MXyMqcEJ6Se0SCWcYCKZTQ.jpeg' }}
                     />
                 ) : (
-
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} >
                     
                     {VideoProjects.length > 0 ? (
@@ -144,15 +156,13 @@ export default function HomeScreen({ route }) {
                           imageSource={{ uri: project.thumbnail_url }}
                           date={project.createdAt}
                           id={project.project_id}
-                          username={username}
-                          userid={userid}
                         />
                       ))
                     ) : (
-                      <Text style={styles.noProjectsText}>No projects found</Text>
+                      <Text style={styles.noProjectsText}></Text>
                     )}
                       <View style={styles.addButton}>
-                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video', username: username, userid: userid })}>
+                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
                             <Icon iconName="add" size={50} />
                         </TouchableOpacity>
                       </View>
@@ -160,11 +170,10 @@ export default function HomeScreen({ route }) {
                 )}
           </View>
 
-
           <View style={styles.mobileVideosSection}>
             <View style={styles.mobileVideosHeader}>
               <Text style={styles.mobileVideosTitle}>Recent Shorts</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Projects', { username: username, userid: userid })}>
+              <TouchableOpacity onPress={() => navigation.navigate('Projects')}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
             </View>
@@ -172,8 +181,6 @@ export default function HomeScreen({ route }) {
                   <ActivityIndicator size="large" color="#0000ff" />
                 ) : error ? (
                   <ProjectItem
-                      username={username}
-                      userid={userid}
                       width={170}
                       title="Error"
                       type={error}
@@ -192,15 +199,13 @@ export default function HomeScreen({ route }) {
                           imageSource={{ uri: project.thumbnail_url }}
                           date={project.createdAt}
                           id={project.project_id}
-                          username={username}
-                          userid={userid}
                         />
                       ))
                     ) : (
-                      <Text style={styles.noProjectsText}>No projects found</Text>
+                      <Text style={styles.noProjectsText}></Text>
                     )}
                       <View style={styles.addButton}>
-                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts', username: username, userid: userid })}>
+                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts' })}>
                             <Icon iconName="add" size={50} />
                         </TouchableOpacity>
                       </View>
@@ -208,23 +213,20 @@ export default function HomeScreen({ route }) {
                 )}
           </View>
 
-
           <View style={{ marginBottom: 100 }}>
           </View>
-
-
-
         
         </ScrollView>
       </SafeAreaView>
       
-      <BottomNavigation target={'Home'} username={username} userid={userid}/>
+      <BottomNavigation target={'Home'}/>
     </>
   );
 }
 
 const createStyles = (colors) => StyleSheet.create({
   addButton: {
+    height: 170,
     width: 170,
     justifyContent: 'center',
     alignItems: 'center',

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ImageBackground, Text, TextInput, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {GENTUBE_API_KEY} from '@env'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height, width } = Dimensions.get('window');
 const BASE_URL = 'https://gentube.vercel.app'; 
@@ -11,6 +12,20 @@ const SignUpScreen = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const hasLowerCase = (password) => /[a-z]/.test(password);
+  const hasUpperCase = (password) => /[A-Z]/.test(password);
+  const hasNumber = (password) => /\d/.test(password);
+  const isLongEnough = (password) => password.length >= 6;
+
+  const validatePassword = (password) => {
+    return hasLowerCase(password) && hasUpperCase(password) && hasNumber(password) && isLongEnough(password);
+  };
 
   const handleCreateAccount = async () => {
     if (!username || !email || !password) {
@@ -22,11 +37,24 @@ const SignUpScreen = () => {
       return;
     }
 
+    if (!validateEmail(email)) {
+      Alert.alert(
+        "Invalid Email",
+        "Please enter a valid email address",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      return;
+    }
+
     try {
       const response = await fetch(`${BASE_URL}/MongoDB/createUser`, {
         method: 'POST',
         headers: {
-          'Authorization': GENTUBE_API_KEY, // Replace with your actual API key
+          'Authorization': GENTUBE_API_KEY,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -37,8 +65,12 @@ const SignUpScreen = () => {
       });
 
       const data = await response.json();
+      console.log(data);
 
-      if (response.status === 201) {
+      if (data.user_id) {
+        await AsyncStorage.setItem('username', username);
+        await AsyncStorage.setItem('userid', data.user_id);
+        
         Alert.alert(
           "Success",
           "Account created successfully!",
@@ -50,16 +82,16 @@ const SignUpScreen = () => {
           ]
         );
       } else {
-        throw new Error(data.error || 'Failed to create account');
+        Alert.alert(
+          "Error",
+          "Username or email already exists",
+          [{ text: "OK" }]
+        );
       }
     } catch (error) {
-      let errorMessage = "Failed to create account";
-      if (error.response?.status === 409) {
-        errorMessage = "Username or email already exists";
-      }
       Alert.alert(
         "Error",
-        errorMessage,
+        "Username or email already exists",
         [{ text: "OK" }]
       );
     }
@@ -85,6 +117,8 @@ const SignUpScreen = () => {
             placeholderTextColor="#A9A9A9"
             value={email}
             onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
           <Text style={styles.inputLabel}>Password</Text>
           <TextInput 
@@ -95,6 +129,20 @@ const SignUpScreen = () => {
             value={password}
             onChangeText={setPassword}
           />
+          <View style={styles.passwordRequirements}>
+            <Text style={[styles.requirement, {color: hasLowerCase(password) ? 'green' : 'red'}]}>
+              • One lowercase letter
+            </Text>
+            <Text style={[styles.requirement, {color: hasUpperCase(password) ? 'green' : 'red'}]}>
+              • One uppercase letter
+            </Text>
+            <Text style={[styles.requirement, {color: hasNumber(password) ? 'green' : 'red'}]}>
+              • One number
+            </Text>
+            <Text style={[styles.requirement, {color: isLongEnough(password) ? 'green' : 'red'}]}>
+              • Minimum 6 characters
+            </Text>
+          </View>
         </View>
        
         <TouchableOpacity style={styles.loginButton} onPress={handleCreateAccount}>
@@ -167,6 +215,14 @@ const styles = StyleSheet.create({
   registerLink: {
     color: '#007BFF',
     fontWeight: 'bold',
+  },
+  passwordRequirements: {
+    marginTop: -10,
+    marginBottom: 15,
+  },
+  requirement: {
+    fontSize: 12,
+    marginBottom: 2,
   }
 });
 

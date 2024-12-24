@@ -1,85 +1,72 @@
 import React, { useState } from 'react';
 import { View, Text, Button, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useColorContext } from '../assets/Variables/colors';
-import UploadBtn from './UploadVideo';
-import { ACCESS_TOCKEN } from '@env';
 
-export default function VideoInfo({ title, description }) {
-  const [visibility, setVisibility] = useState('Private');
-  const [location, setLocation] = useState('');
-  const [isRemixingAllowed, setIsRemixingAllowed] = useState(false);
-  const [isCommentsEnabled, setIsCommentsEnabled] = useState(true);
+export default function VideoInfo({ title, description, projectCategory, createdAt, duration, script }) {
+
   const [colors] = useColorContext();
   const styles = createStyles(colors);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isScriptExpanded, setIsScriptExpanded] = useState(false);
 
-  // const UploadVideo = async () => {
-  //   console.log("Uploading Video")
-  //   try {
-  //     Alert.alert('Uploading Video', 'Please wait while we upload your video...');
-  //     const response = await fetch('http://192.168.0.104:5000/uploadVideo2', {
-  //       method: 'GET',
-  //     });
-  //     const data = await response.json();
-  //     if (response.ok) {
-  //       alert(`Video uploaded successfully!`);
-  //     } else {
-  //       alert(`Error: ${data.error}`);
-  //     }
-  //   } catch (error) {
-  //     alert(`An error occurred while uploading the video: ${error.message}`);
-  //   }
-
-  // };
-
-
-
-  const truncateDescription = (desc) => {
-    const words = desc.split(' ');
+  const truncateText = (text) => {
+    const words = text.split(' ');
     if (words.length > 20) {
       return words.slice(0, 20).join(' ') + '...';
     }
-    return desc;
+    return text;
   };
 
   const handleDescriptionPress = () => {
-    Alert.alert('Full Description', description, [{ text: 'OK' }]);
+    setIsDescriptionExpanded(!isDescriptionExpanded);
+  };
+
+  const handleScriptPress = () => {
+    setIsScriptExpanded(!isScriptExpanded);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>{title}</Text>
 
-  
-      {/* Description Input */}
-      <TouchableOpacity onPress={() => {}}>
-        <Text style={styles.linkText}>Add description</Text>
-      </TouchableOpacity>
+      <View style={styles.detailsContainer}>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Category:</Text>
+          <Text style={styles.detailValue}>{projectCategory}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Created:</Text>
+          <Text style={styles.detailValue}>{createdAt}</Text>
+        </View>
 
-      {/* Description Container */}
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Duration:</Text>
+          <Text style={styles.detailValue}>{duration} seconds</Text>
+        </View>
+      </View>
+
+      <Text style={styles.sectionTitle}>Description</Text>
       <TouchableOpacity onPress={handleDescriptionPress}>
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.descriptionText}>{truncateDescription(description)}</Text>
+        <View style={[styles.descriptionContainer, isDescriptionExpanded && styles.expandedContainer]}>
+          <Text style={styles.descriptionText}>
+            {isDescriptionExpanded ? description : truncateText(description)}
+          </Text>
         </View>
       </TouchableOpacity>
 
-      {/* Visibility */}
-      <TouchableOpacity onPress={() => {}}>
-        <Text style={styles.linkText}>Visibility: {visibility}</Text>
-      </TouchableOpacity>
-
-      {/* Location Input */}
-      <TouchableOpacity onPress={() => {}}>
-        <Text style={styles.linkText}>Location</Text>
-      </TouchableOpacity>
-
-
-      {/* Upload Button */}
-      <UploadBtn
-  accessToken={ACCESS_TOCKEN}
-  videoUrl="https://www.w3schools.com/html/mov_bbb.mp4"
-  title="Canvas GPT"
-  description="This is a test video"
-/>
+      {script && (
+        <>
+          <Text style={styles.sectionTitle}>Script</Text>
+          <TouchableOpacity onPress={handleScriptPress}>
+            <View style={[styles.scriptContainer, isScriptExpanded && styles.expandedContainer]}>
+              <Text style={styles.scriptText}>
+                {isScriptExpanded ? script : truncateText(script)}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 }
@@ -91,51 +78,56 @@ const createStyles = (colors) => StyleSheet.create({
   header: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 15,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+  detailsContainer: {
+    marginBottom: 20,
   },
-  imagePlaceholder: {
-    width: '100%',
-    height: 150,
-    backgroundColor: colors.lightGray,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  input: {
-    borderColor: colors.lightGray,
-    borderWidth: 1,
-    padding: 8,
-    marginBottom: 10,
-    borderRadius: 8,
-  },
-  linkText: {
-    fontSize: 16,
-    color: colors.theme,
-    marginBottom: 10,
-  },
-  row: {
+  detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
   },
-  buttonContainer: {
-    marginTop: 10,
-    backgroundColor: colors.theme,
+  detailLabel: {
+    fontSize: 16,
+    color: colors.darkGray,
+    fontWeight: '500',
+  },
+  detailValue: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+    color: colors.text,
   },
   descriptionContainer: {
-    padding: 10,
+    padding: 12,
     backgroundColor: colors.lightGray,
-    borderRadius: 5,
-    marginBottom: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  expandedContainer: {
+    minHeight: 100,
   },
   descriptionText: {
     fontSize: 16,
     color: colors.darkGray,
+    lineHeight: 22,
   },
+  scriptContainer: {
+    padding: 12,
+    backgroundColor: colors.lightGray,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  scriptText: {
+    fontSize: 16,
+    color: colors.darkGray,
+    lineHeight: 22,
+  }
 });

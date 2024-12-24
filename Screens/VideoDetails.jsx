@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Animated, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Animated, Alert, TextInput, Linking } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import VideoPlayer from '../Components/Video';
 import { useColorContext } from '../assets/Variables/colors';
@@ -8,9 +8,9 @@ import UpperNavigation from '../Components/UpperNavigation';
 import BottomNavigation from '../Components/BottomNavigation';
 import SideBar from '../Components/SideBar';
 import { useNavigation } from '@react-navigation/native';
+import DownloadBtn from '../Components/DownloadBtn';
 
-export default function VideoDetails({ route }) {
-  const { username } = route.params;
+export default function VideoDetails({route}) {
   const [colors] = useColorContext();
   const styles = createStyles(colors);
   const navigation = useNavigation();
@@ -23,6 +23,7 @@ export default function VideoDetails({ route }) {
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
   const [editedTitle, setEditedTitle] = useState('');
   const [editedDescription, setEditedDescription] = useState('');
+  const [downloading, setDownloading] = useState(false);
 
   const apiUrl = "https://gentube.vercel.app";
 
@@ -200,7 +201,7 @@ export default function VideoDetails({ route }) {
   return (
     <>
       <UpperNavigation title={"Video Details"} toggleSidebar={toggleSidebar} />
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username}/>
+      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {project?.FinalURL && (
@@ -250,6 +251,13 @@ export default function VideoDetails({ route }) {
             <Text style={styles.views}>
               {project?.createdAt}
             </Text>
+
+            <DownloadBtn 
+              videoUrl={project?.FinalURL}
+              title={project?.title}
+              downloading={downloading}
+              setDownloading={setDownloading}
+            />
               
             <View style={styles.gradientDivider} />
 
@@ -289,7 +297,7 @@ export default function VideoDetails({ route }) {
         </View>
         <View style={styles.bottomMargin} />
       </ScrollView>
-      <BottomNavigation username={username}/>
+      <BottomNavigation />
     </>
   );
 }

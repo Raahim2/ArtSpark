@@ -1,4 +1,4 @@
-import React, { useState , useRef } from 'react';
+import React, { useState , useRef, useEffect } from 'react';
 import { View, Text, TextInput, Switch, StyleSheet, ScrollView, TouchableOpacity , Animated } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import BottomNavigation from '../Components/BottomNavigation';
@@ -6,7 +6,7 @@ import UpperNavigation from '../Components/UpperNavigation';
 import SideBar from '../Components/SideBar';
 import { useColorContext } from '../assets/Variables/colors';
 import { Ionicons } from '@expo/vector-icons';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FoldableSection = ({ title, children }) => {
     const [isOpen, setIsOpen] = useState(true);
@@ -23,8 +23,7 @@ const FoldableSection = ({ title, children }) => {
     );
 };
 
-const SettingsScreen = ({ route }) => {
-    const { username } = route.params;
+const SettingsScreen = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const sidebarAnimation = useRef(new Animated.Value(0)).current;
     const [appTheme, setAppTheme] = useState('Light');
@@ -33,7 +32,27 @@ const SettingsScreen = ({ route }) => {
     const [colors, setColors] = useColorContext();
     const styles = createStyles(colors);
     const [selectedColor, setSelectedColor] = useState(colors.theme);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+    const [videoQuality, setVideoQuality] = useState('1080p');
+    const [autoSave, setAutoSave] = useState(true);
 
+    useEffect(() => {
+        const loadThemeColor = async () => {
+            try {
+                const savedColor = await AsyncStorage.getItem('themeColor');
+                if (savedColor) {
+                    setSelectedColor(savedColor);
+                    setColors(prevColors => ({
+                        ...prevColors,
+                        theme: savedColor
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading theme color:', error);
+            }
+        };
+        loadThemeColor();
+    }, []);
 
     const colorOptions = [
         { label: 'Theme 1', value: colors.theme1 },
@@ -58,21 +77,23 @@ const SettingsScreen = ({ route }) => {
       setIsSidebarOpen(!isSidebarOpen);
     };
 
-    const handleColorOptionPress = (color) => {
+    const handleColorOptionPress = async (color) => {
         setSelectedColor(color);
         setColors((prevColors) => ({
             ...prevColors,
             theme: color,
         }));
+        try {
+            await AsyncStorage.setItem('themeColor', color);
+        } catch (error) {
+            console.error('Error saving theme color:', error);
+        }
     };
-
-    
-    
 
     return (
         <>
             <UpperNavigation toggleSidebar={toggleSidebar} title={"Settings"} />
-            <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username}/>
+            <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
 
             <ScrollView style={styles.container}>
                 <FoldableSection title="Customization Options">
@@ -92,31 +113,73 @@ const SettingsScreen = ({ route }) => {
                             </React.Fragment>
                         ))}
                     </View>
-                    <Text style={styles.optionLabel}>Language Settings:</Text>
-                    <Picker
-                        selectedValue={language}
-                        onValueChange={(itemValue) => setLanguage(itemValue)}
-                        style={styles.picker}
-                    >
-                        <Picker.Item label="English" value="English" />
-                        <Picker.Item label="Spanish" value="Spanish" />
-                        <Picker.Item label="French" value="French" />
-                    </Picker>
-                    <View style={styles.watermarkContainer}>
-                        <Text style={styles.optionLabel}>Watermark:</Text>
-                        <Switch value={watermark} onValueChange={(value) => setWatermark(value)} />
+                </FoldableSection>
+
+                <FoldableSection title="Video Generation Settings">
+                    <View style={styles.settingItem}>
+                        <Text style={styles.optionLabel}>Video Quality:</Text>
+                        <Picker
+                            selectedValue={videoQuality}
+                            style={styles.picker}
+                            onValueChange={(value) => setVideoQuality(value)}>
+                            <Picker.Item label="4K (2160p)" value="2160p" />
+                            <Picker.Item label="1080p" value="1080p" />
+                            <Picker.Item label="720p" value="720p" />
+                        </Picker>
+                    </View>
+                    <View style={styles.settingItem}>
+                        <Text style={styles.optionLabel}>Auto-Save Projects</Text>
+                        <Switch 
+                            value={autoSave}
+                            onValueChange={setAutoSave}
+                            trackColor={{ false: colors.light, true: colors.theme }}
+                        />
                     </View>
                 </FoldableSection>
 
-               
+                <FoldableSection title="Notification Settings">
+                    <View style={styles.settingItem}>
+                        <Text style={styles.optionLabel}>Enable Notifications</Text>
+                        <Switch 
+                            value={notificationsEnabled}
+                            onValueChange={setNotificationsEnabled}
+                            trackColor={{ false: colors.light, true: colors.theme }}
+                        />
+                    </View>
+                </FoldableSection>
 
-               
+                <FoldableSection title="Help & Support">
+                    <TouchableOpacity style={styles.helpItem}>
+                        <Text style={styles.helpText}>FAQ</Text>
+                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.helpItem}>
+                        <Text style={styles.helpText}>Contact Support</Text>
+                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.helpItem}>
+                        <Text style={styles.helpText}>Tutorial Videos</Text>
+                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                    </TouchableOpacity>
+                </FoldableSection>
+
+                <FoldableSection title="Account Settings">
+                    <TouchableOpacity style={styles.helpItem}>
+                        <Text style={styles.helpText}>Change Password</Text>
+                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.helpItem}>
+                        <Text style={styles.helpText}>Privacy Settings</Text>
+                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.helpItem, styles.dangerItem]}>
+                        <Text style={[styles.helpText, styles.dangerText]}>Delete Account</Text>
+                        <Ionicons name="chevron-forward" size={24} color={colors.danger} />
+                    </TouchableOpacity>
+                </FoldableSection>
             </ScrollView>
 
-     
-            <BottomNavigation target="Settings"  username={username}/>
-
-
+            <BottomNavigation target="Settings"/>
         </>
     );
 };
@@ -131,9 +194,9 @@ const createStyles = (colors) => StyleSheet.create({
         marginBottom: 15,
         borderRadius: 10,
         overflow: 'hidden',
-        backgroundColor: colors.white, // Use white background for better contrast
-        elevation: 3, // Adds shadow on Android
-        shadowColor: colors.black, // Shadow for iOS
+        backgroundColor: colors.white,
+        elevation: 3,
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
@@ -143,7 +206,7 @@ const createStyles = (colors) => StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 15,
-        backgroundColor: colors.theme, // Highlight header with primary color
+        backgroundColor: colors.theme,
     },
     subHeader: {
         fontSize: 22,
@@ -157,7 +220,7 @@ const createStyles = (colors) => StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         marginVertical: 10,
-        color: colors.text, // Use the defined text color
+        color: colors.black,
     },
     picker: {
         height: 50,
@@ -167,11 +230,11 @@ const createStyles = (colors) => StyleSheet.create({
         borderRadius: 5,
         paddingHorizontal: 10,
     },
-    watermarkContainer: {
+    settingItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginVertical: 10,
+        paddingVertical: 10,
     },
     colorOptionsContainer: {
         flexDirection: 'row',
@@ -191,6 +254,24 @@ const createStyles = (colors) => StyleSheet.create({
         borderColor: colors.theme,
         borderWidth: 3,
     },
+    helpItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.borderGray,
+    },
+    helpText: {
+        fontSize: 16,
+        color: colors.black,
+    },
+    dangerItem: {
+        borderBottomWidth: 0,
+    },
+    dangerText: {
+        color: colors.danger,
+    }
 });
 
 export default SettingsScreen;

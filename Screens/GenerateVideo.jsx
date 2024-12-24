@@ -9,36 +9,57 @@ import ProgressBar from '../Components/ProgressBar';
 import Thumbnail from '../Components/Thumbnail';
 import VideoInfo from '../Components/VideoInfo';
 import VideoPlayer from '../Components/Video';
+import DownloadBtn from '../Components/DownloadBtn';
 
 import InfoGenerator from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/InfoGenerator';
 import generateThumbnail from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/ThumbnailGenerator';
 import getPexelsVideos from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/MediaGeneration';
 import concatVideos from '../VideoGenerationCode/JavaScriptReact/Models/Concat';
 import generateAudio from '../VideoGenerationCode/JavaScriptReact/VideoGeneration/AudioGenerator';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 import { useColorContext } from '../assets/Variables/colors';
 import { GENTUBE_API_KEY } from '@env'
 
 
-export default function GenerateVideo({route }) {
+export default function GenerateVideo({route}) {
   const [colors] = useColorContext();
   const styles = createStyles(colors);
   const [duration, setDuration] = useState(30);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
   const [videoData, setVideoData] = useState(null);
-  
   const [isThumbnailGenerated, setIsThumbnailGenerated] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
-
-
   const [videoStatus, setVideoStatus] = useState("Generating Video...");
   const [videoSource, setVideoSource] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   const rotation = useRef(new Animated.Value(0)).current;
   const apiUrl = "https://gentube.vercel.app/";
-  const { username , userid , projectCategory  , initialPrompt} = route.params; 
+  const { projectCategory = 'Video', initialPrompt } = route.params || {}; 
+
+  const [userid, setUserid] = useState('');
+
+  
+
+  useEffect(() => {
+    const fetchUserid = async () => {
+      try {
+        const storedUserid = await AsyncStorage.getItem('userid');
+        if (storedUserid) {
+          setUserid(storedUserid); // Set the retrieved username to state
+        } else {
+          console.log('No username found');
+        }
+      } catch (error) {
+        console.error('Error retrieving username:', error);
+      }
+    };
+
+    fetchUserid();
+  }, []);
 
 
   const toggleSidebar = () => {
@@ -294,13 +315,23 @@ export default function GenerateVideo({route }) {
   return (
     <>
       <UpperNavigation toggleSidebar={toggleSidebar} title={`Generate ${projectCategory}`} />
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} username={username}/>
+      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation}/>
 
       <ScrollView style={styles.container} >
         {videoData ? (
           <>
             {videoSource ? (
-              <VideoPlayer videoSource={videoSource} projectCategory={projectCategory}/>
+              <>
+                <VideoPlayer videoSource={videoSource} projectCategory={projectCategory}/>
+                <View style={{padding:15}}>
+                  <DownloadBtn 
+                    videoUrl={videoSource}
+                    title={videoData.title}
+                    downloading={downloading}
+                    setDownloading={setDownloading}
+                  />
+                </View>
+              </>
             ) : (
               <Thumbnail isGenerating={!isThumbnailGenerated} thumbnailUrl={thumbnailUrl} />
             )}
@@ -313,10 +344,10 @@ export default function GenerateVideo({route }) {
             <VideoInfo 
               title={videoData.title}
               description={videoData.description}
-              visibility="Public"
-              location="New York"
-              isRemixingAllowed={true}
-              isCommentsEnabled={true}
+              projectCategory={projectCategory}
+              createdAt={videoData.createdAt}
+              duration={videoData.duration}
+              script={videoData.script}
             />
           </>
         ) : (
@@ -334,7 +365,7 @@ export default function GenerateVideo({route }) {
         <PromptInput onSend={(prompt , duration) => generateVideo(prompt , duration)} projectCategory={projectCategory} initialPrompt={initialPrompt} /> 
       </View>
 
-      <BottomNavigation  username={username}/>
+      <BottomNavigation/>
     </>
   );
 }
