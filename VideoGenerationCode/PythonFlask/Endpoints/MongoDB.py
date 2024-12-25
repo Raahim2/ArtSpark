@@ -353,13 +353,13 @@ def create_user():
 
 @MongoDb.route('/login', methods=['POST'])
 def login():
-    #if request is None or request.get_json() is None:
-    #    return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
+    if request is None or request.get_json() is None:
+        return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
         
-    #provided_api_key = request.headers.get("Authorization")
+    provided_api_key = request.headers.get("Authorization")
 
-    #if provided_api_key != gentube_api_key:
-    #    return jsonify({"message": "Invalid API Key"}), 403
+    if provided_api_key != gentube_api_key:
+        return jsonify({"message": "Invalid API Key"}), 403
 
     try:
         request_data = request.get_json()
