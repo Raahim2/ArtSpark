@@ -68,7 +68,7 @@ const PromptInput = ({ onSend, projectCategory  , initialPrompt}) => {
         />
         <TextInput
           style={styles.input}
-          placeholder="Enter Video Generation Prompt"
+          placeholder="Enter Prompt"
           value={inputText}
           onChangeText={setInputText}
         />
