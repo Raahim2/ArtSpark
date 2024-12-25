@@ -121,7 +121,6 @@ GenTube's API is hosted at `https://gentube.vercel.app/` Made With Flask and Mon
 
 - Documentation: [Wiki](https://github.com/Raahim2/GenTube/wiki)
 - Issues: [GitHub Issues](https://github.com/Raahim2/GenTube/issues)
-- Email: support@gentube.com
 
 ## 🙏 Acknowledgments
 

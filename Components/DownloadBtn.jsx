@@ -1,6 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, Alert, Platform, Linking } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import { TouchableOpacity, Text, StyleSheet, Alert, Linking } from 'react-native';
 import { useColorContext } from '../assets/Variables/colors';
 
 export default function DownloadBtn({ videoUrl, title, downloading, setDownloading }) {
@@ -16,45 +15,20 @@ export default function DownloadBtn({ videoUrl, title, downloading, setDownloadi
         return;
       }
 
-      // Create filename from title or use default
-      const filename = `${title || 'video'}.mp4`;
+      // Simulate download delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      if (Platform.OS === 'web') {
-        // For web, open video in new tab for download
-        window.open(videoUrl, '_blank');
+      // Open video URL in browser/external player
+      if (videoUrl.uri) {
+        await Linking.openURL(videoUrl.uri);
       } else {
-        // For mobile, download using FileSystem then share
-        const fileUri = FileSystem.documentDirectory + filename;
-        const downloadResumable = FileSystem.createDownloadResumable(
-          videoUrl,
-          fileUri,
-          {},
-          (downloadProgress) => {
-            const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
-            // Could add progress indicator here
-          }
-        );
-
-        const { uri } = await downloadResumable.downloadAsync();
-
-        // Share the downloaded file
-        if (Platform.OS === 'ios') {
-          Linking.openURL(`shareddocuments://${uri}`);
-        } else {
-          // For Android, you may need a different sharing approach
-          // One option is to use Share API if available
-          try {
-            await Linking.openURL(`content://${uri}`);
-          } catch (err) {
-            Alert.alert('Info', 'File downloaded to: ' + uri);
-          }
-        }
+        await Linking.openURL(videoUrl);
       }
 
-      Alert.alert('Success', 'Video downloaded successfully!');
+      Alert.alert('Success', 'Video opened successfully!');
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Failed to download video');
+      Alert.alert('Error', 'Failed to open video');
     } finally {
       setDownloading(false);
     }
@@ -67,7 +41,7 @@ export default function DownloadBtn({ videoUrl, title, downloading, setDownloadi
       disabled={downloading}
     >
       <Text style={styles.buttonText}>
-        {downloading ? 'Downloading...' : 'Download Video'}
+        {downloading ? 'Opening...' : 'Open Video'}
       </Text>
     </TouchableOpacity>
   );
