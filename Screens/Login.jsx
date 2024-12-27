@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { View, StyleSheet, ImageBackground, Text, TextInput, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';  // Import AsyncStorage
 import { GENTUBE_API_KEY } from '@env';
+
 
 const { height, width } = Dimensions.get('window');
 const BASE_URL = 'https://gentube.vercel.app';
@@ -11,6 +12,8 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
+
 
 
   React.useEffect(() => {

@@ -1,13 +1,23 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, Alert, Linking } from 'react-native';
+import React, { useState } from 'react';
+import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 import { useColorContext } from '../assets/Variables/colors';
 
 export default function DownloadBtn({ videoUrl, title, downloading, setDownloading }) {
   const [colors] = useColorContext();
+  const [progress, setProgress] = useState(0); // Track progress percentage
   const styles = createStyles(colors);
 
   const downloadVideo = async () => {
     try {
+      // Request permissions to access the media library
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant permission to save videos');
+        return;
+      }
+
       setDownloading(true);
 
       if (!videoUrl) {
@@ -15,22 +25,36 @@ export default function DownloadBtn({ videoUrl, title, downloading, setDownloadi
         return;
       }
 
-      // Simulate download delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create filename from title or use default
+      const filename = `${title || 'video'}.mp4`;
 
-      // Open video URL in browser/external player
-      if (videoUrl.uri) {
-        await Linking.openURL(videoUrl.uri);
-      } else {
-        await Linking.openURL(videoUrl);
-      }
+      // Create a URI for the file in the document directory
+      const fileUri = FileSystem.documentDirectory + filename;
 
-      Alert.alert('Success', 'Video opened successfully!');
+      // Download the file to the document directory
+      const downloadResumable = FileSystem.createDownloadResumable(
+        videoUrl,
+        fileUri,
+        {},
+        (downloadProgress) => {
+          const currentProgress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+          setProgress(currentProgress); // Update progress
+        }
+      );
+
+      const { uri } = await downloadResumable.downloadAsync();
+
+      // Save the downloaded video to the media library (gallery)
+      const asset = await MediaLibrary.createAssetAsync(uri);
+      await MediaLibrary.createAlbumAsync('Downloads', asset, false);
+
+      Alert.alert('Success', 'Video saved to your gallery!');
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Failed to open video');
+      Alert.alert('Error', 'Failed to download video');
     } finally {
       setDownloading(false);
+      setProgress(0); // Reset progress after download completes
     }
   };
 
@@ -41,7 +65,7 @@ export default function DownloadBtn({ videoUrl, title, downloading, setDownloadi
       disabled={downloading}
     >
       <Text style={styles.buttonText}>
-        {downloading ? 'Opening...' : 'Open Video'}
+        {downloading ? `Downloading... ${Math.round(progress * 100)}%` : 'Download Video'}
       </Text>
     </TouchableOpacity>
   );
@@ -53,97 +77,11 @@ const createStyles = (colors) => StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
-    marginVertical: 10
+    marginVertical: 10,
   },
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '500'
-  }
+    fontWeight: '500',
+  },
 });
-
-
-// old method
-// import React from 'react';
-// import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
-// import * as FileSystem from 'expo-file-system';
-// import * as MediaLibrary from 'expo-media-library';
-// import { useColorContext } from '../assets/Variables/colors';
-
-// export default function DownloadBtn({ videoUrl, title, downloading, setDownloading }) {
-//   const [colors] = useColorContext();
-//   const styles = createStyles(colors);
-
-//   const downloadVideo = async () => {
-//     try {
-//       // Request permissions
-//       const { status } = await MediaLibrary.requestPermissionsAsync();
-//       if (status !== 'granted') {
-//         Alert.alert('Permission needed', 'Please grant permission to save videos');
-//         return;
-//       }
-
-//       setDownloading(true);
-
-//       if (!videoUrl) {
-//         Alert.alert('Error', 'Video URL not found');
-//         return;
-//       }
-
-//       // Create filename from title or use default
-//       const filename = `${title || 'video'}.mp4`;
-
-//       // Download to temp directory first
-//       const fileUri = FileSystem.documentDirectory + filename;
-//       const downloadResumable = FileSystem.createDownloadResumable(
-//         videoUrl,
-//         fileUri,
-//         {},
-//         (downloadProgress) => {
-//           const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
-//           // Could add progress indicator here
-//         }
-//       );
-
-//       const { uri } = await downloadResumable.downloadAsync();
-
-//       // Save to media library
-//       const asset = await MediaLibrary.createAssetAsync(uri);
-//       await MediaLibrary.createAlbumAsync('GenTube', asset, false);
-
-//       Alert.alert('Success', 'Video saved to your gallery!');
-//     } catch (error) {
-//       console.error(error);
-//       Alert.alert('Error', 'Failed to download video');
-//     } finally {
-//       setDownloading(false);
-//     }
-//   };
-
-//   return (
-//     <TouchableOpacity 
-//       style={styles.downloadButton}
-//       onPress={downloadVideo}
-//       disabled={downloading}
-//     >
-//       <Text style={styles.buttonText}>
-//         {downloading ? 'Downloading...' : 'Download Video'}
-//       </Text>
-//     </TouchableOpacity>
-//   );
-// }
-
-// const createStyles = (colors) => StyleSheet.create({
-//   downloadButton: {
-//     backgroundColor: colors.theme,
-//     padding: 10,
-//     borderRadius: 5,
-//     alignItems: 'center',
-//     marginVertical: 10
-//   },
-//   buttonText: {
-//     color: '#FFFFFF',
-//     fontSize: 16,
-//     fontWeight: '500'
-//   }
-// });

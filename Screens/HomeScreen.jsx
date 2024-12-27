@@ -8,7 +8,6 @@ import WhatsNew from '../Components/WhatsNew';
 import Icon from '../Components/Icon';
 import SuggestionPrompt from '../Components/SuggestionPrompt';
 import ProjectItem from '../Components/ProjectItem';
-import VideoPlayer from '../Components/Video';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native';
 import { Animated } from 'react-native';
@@ -26,6 +25,8 @@ export default function HomeScreen() {
   const styles = createStyles(colors);
   const apiUrl = 'https://gentube.vercel.app';  // Replace with your actual Vercel URL
   const [userid, setUserid] = useState('');
+
+
 
   useEffect(() => {
     const fetchUserid = async () => {

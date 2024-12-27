@@ -12,14 +12,18 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true  
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/Images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.raahim2.GenTube"
+      "package": "com.raahim2.GenTube",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
     "web": {
       "favicon": "./assets/Images/logo.png"
