@@ -226,15 +226,15 @@ def upload_video():
 
 @MongoDb.route('/GetProjects', methods=['POST'])
 def get_projects():
-    #print("Required API Key "  , gentube_api_key)
+    
 
-    #if request is None or request.get_json() is None:
-        #return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
+    if request is None or request.get_json() is None:
+        return jsonify({"message": "You don't have access. Please Provide a valid API Key"}), 400
         
-    #provided_api_key = request.headers.get("Authorization")
-    #print("Provided API Key " , provided_api_key)
+    provided_api_key = request.headers.get("Authorization")
+    
 
-    #if provided_api_key != gentube_api_key:
+    if provided_api_key != gentube_api_key:
         #return jsonify({"message": "Invalid API Key"}), 403
     
     try:
