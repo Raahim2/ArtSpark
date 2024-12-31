@@ -235,7 +235,7 @@ def get_projects():
     
 
     if provided_api_key != gentube_api_key:
-        #return jsonify({"message": "Invalid API Key"}), 403
+        return jsonify({"message": "Invalid API Key"}), 403
     
     try:
         request_data = request.get_json()
