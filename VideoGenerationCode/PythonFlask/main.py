@@ -1,5 +1,5 @@
 
-from flask import Flask, jsonify 
+from flask import Flask, jsonify , send_from_directory
 from Endpoints.VideoEditing import VideoEditing 
 from Endpoints.MongoDB import MongoDb
 from Endpoints.VideoGeneration import GenerateVideo
@@ -11,6 +11,10 @@ app.register_blueprint(VideoEditing, url_prefix='/VideoEditing')
 app.register_blueprint(MongoDb, url_prefix='/MongoDB')
 app.register_blueprint(GenerateVideo, url_prefix='/VideoGeneration')
 # app.register_blueprint(AuthBP, url_prefix='/Auth')
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(directory='static', path='logo.png', mimetype='image/png')
 
 @app.route('/' , methods=['GET' , 'POST'])
 def index():
