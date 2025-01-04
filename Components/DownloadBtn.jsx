@@ -28,8 +28,8 @@ export default function DownloadBtn({ videoUrl, title, downloading, setDownloadi
       // Create filename from title or use default
       const filename = `${title || 'video'}.mp4`;
 
-      // Create a URI for the file in the document directory
-      const fileUri = FileSystem.documentDirectory + filename;
+      // Use cacheDirectory or externalStorageDirectory for Android
+      const fileUri = FileSystem.cacheDirectory + filename; // For Android, use cacheDirectory
 
       // Download the file to the document directory
       const downloadResumable = FileSystem.createDownloadResumable(
@@ -50,8 +50,8 @@ export default function DownloadBtn({ videoUrl, title, downloading, setDownloadi
 
       Alert.alert('Success', 'Video saved to your gallery!');
     } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Failed to download video');
+      console.error('Download error:', error);
+      Alert.alert('Error', 'Failed to download video ' + error);
     } finally {
       setDownloading(false);
       setProgress(0); // Reset progress after download completes

@@ -103,9 +103,11 @@ export default function HomeScreen() {
 
 
   return (
-    <>
+    <>  
       <UpperNavigation toggleSidebar={toggleSidebar} title={"Home"} />
       <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
+
+     
 
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false}>

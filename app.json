@@ -22,8 +22,11 @@
       "package": "com.raahim2.GenTube",
       "permissions": [
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
-      ]
+        "ACCESS_NETWORK_STATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/Images/logo.png"
@@ -33,6 +36,9 @@
         "projectId": "d4909823-8aff-4ee2-a990-47952cc0e21f"
       }
     },
-    "scheme": "GenTube"
+    "scheme": "GenTube",
+    "plugins": [
+      "expo-video"
+    ]
   }
 }
