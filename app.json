@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GenTube",
-    "slug": "GenTube",
+    "name": "ArtSpark",
+    "slug": "ArtSpark",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/Images/logo.png",
@@ -19,26 +19,17 @@
         "foregroundImage": "./assets/Images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.raahim2.GenTube",
-      "permissions": [
-        "INTERNET",
-        "ACCESS_NETWORK_STATE",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ],
+      "package": "com.raahim2.ArtSpark",
       "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/Images/logo.png"
     },
+    "scheme": "GenTube",
     "extra": {
       "eas": {
-        "projectId": "d4909823-8aff-4ee2-a990-47952cc0e21f"
+        "projectId": "073a7cc9-e5e4-4141-8400-a83461b18987"
       }
-    },
-    "scheme": "GenTube",
-    "plugins": [
-      "expo-video"
-    ]
+    }
   }
 }

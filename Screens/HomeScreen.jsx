@@ -1,94 +1,54 @@
-import { StyleSheet, View, SafeAreaView, ScrollView , Text , TouchableOpacity, Image} from 'react-native';
-import React, { useState, useRef  , useEffect , } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import BottomNavigation from '../Components/BottomNavigation';
-import UpperNavigation from '../Components/UpperNavigation';
-import SideBar from '../Components/SideBar';
-import WhatsNew from '../Components/WhatsNew';
-import Icon from '../Components/Icon';
-import SuggestionPrompt from '../Components/SuggestionPrompt';
-import ProjectItem from '../Components/ProjectItem';
+// src/screens/HomeScreen.jsx
+
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, Animated, ActivityIndicator, Alert } from 'react-native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator } from 'react-native';
-import { Animated } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Your App's Components
+import BottomNavigation from '../Components/Home/BottomNavigation';
+import UpperNavigation from '../Components/Home/UpperNavigation';
+import SideBar from '../Components/Home/SideBar';
+import WhatsNew from '../Components/Home/WhatsNew';
+import Icon from '../Components/Home/Icon';
+import SuggestionPrompt from '../Components/Home/SuggestionPrompt';
+import ProjectItem from '../Components/Projects/ProjectItem'; // Import your new, robust ProjectItem
 import { useColorContext } from '../assets/Variables/colors';
-import { GENTUBE_API_KEY } from '@env';
+
+const PROJECTS_STORAGE_KEY = '@creative_suite_projects';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const isFocused = useIsFocused();
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
   const [colors] = useColorContext();
   const styles = createStyles(colors);
-  const apiUrl = 'https://gentube.vercel.app';  // Replace with your actual Vercel URL
-  const [userid, setUserid] = useState('');
 
-
+  const [recentProjects, setRecentProjects] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserid = async () => {
-      try {
-        const storedUserid = await AsyncStorage.getItem('userid');
-        if (storedUserid) {
-          setUserid(storedUserid);
-          fetchProject(storedUserid); // Fetch projects after getting userid
-        } else {
-          console.log('No username found');
+    const loadRecentProjects = async () => {
+      if (isFocused) {
+        setIsLoading(true);
+        try {
+          const projectsJson = await AsyncStorage.getItem(PROJECTS_STORAGE_KEY);
+          const allProjects = projectsJson ? JSON.parse(projectsJson) : [];
+          // The most recent projects are at the beginning of the array
+          setRecentProjects(allProjects.slice(0, 5));
+        } catch (error) {
+          console.error("Failed to load recent projects for home screen:", error);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error('Error retrieving username:', error);
       }
     };
-
-    fetchUserid();
-  }, []);
-
-  const fetchProject = async (uid) => {
-    setLoading(true);
-
-    try {
-      console.log("finding projects for userid: ", uid);
-      const response = await fetch(`${apiUrl}/MongoDB/GetProjects`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': GENTUBE_API_KEY,
-        },
-        body: JSON.stringify({
-          filter_key: "userid",
-          filter_value: uid
-        })
-      });
-
-      if (!response.ok) {
-        const errorMessage = await response.text();
-        console.log(errorMessage);
-        return;
-      }
-
-      const responseData = await response.json();
-      console.log(responseData.length);
-      setProjects(responseData);
-      setLoading(false);
-
-    } catch (error) {
-      setError(`Error: ${error.message}`);
-      setLoading(false);
-    }
-  };
-
-  const VideoProjects = projects.filter((project) => {
-    const categoryMatch = project.category === 'Video';
-    return categoryMatch 
-  });
-
-  const ShortsProjects = projects.filter((project) => {
-    const categoryMatch = project.category === 'Shorts';
-    return categoryMatch 
-  });
+    loadRecentProjects();
+  }, [isFocused]);
 
   const toggleSidebar = () => {
     const toValue = isSidebarOpen ? 0 : 1;
@@ -99,210 +59,99 @@ export default function HomeScreen() {
     }).start();
     setIsSidebarOpen(!isSidebarOpen);
   };
-
-
+  
+  const handleProjectPress = (project) => {
+    if (project.type === 'Pixel Art') {
+      navigation.navigate('PixelArt', { project });
+    } else if (project.type === 'Kaleidoscope') {
+      navigation.navigate('KaleidoscopeCanvas', { project });
+    } else if (project.type === 'Logo Design') {
+      navigation.navigate('LogoGenerator', { project });
+    } else if (project.type === 'Mockup') {
+      navigation.navigate('MockUp', { project });
+    } else {
+      Alert.alert("Unknown Project", "Could not determine the project type to open.");
+    }
+  };
+  
+  const handleAddNewProject = () => {
+    navigation.navigate('KaleidoscopeCanvas', {}); 
+  };
 
   return (
-    <>  
-      <UpperNavigation toggleSidebar={toggleSidebar} title={"Home"} />
-      <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
-
-     
-
       <SafeAreaView style={styles.container}>
+        <UpperNavigation toggleSidebar={toggleSidebar} title={"Home"} />
+        <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
+
         <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
           <WhatsNew />
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 }}>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
-              <Icon iconName="videocam" label="Video" />
+            <TouchableOpacity onPress={handleAddNewProject}>
+              <Icon iconName="color-palette-outline" label="Kaleidoscope" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts' })}>
-              <Icon iconName="film" label="Shorts" />
+            <TouchableOpacity onPress={() => navigation.navigate('PixelArt')}>
+              <Icon iconName="grid" label="Pixel Art" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
-              <Icon iconName="people" label="Post" />
+            <TouchableOpacity onPress={() => navigation.navigate('LogoGenerator')}>
+              <Icon iconName="layers-outline" label="Logo Maker" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
-              <Icon iconName="image" label="Thumbnail" />
+            <TouchableOpacity onPress={() => navigation.navigate('MockUp')}>
+              <Icon iconName="phone-portrait-outline" label="MockUp" />
             </TouchableOpacity>
           </View>
 
           <SuggestionPrompt />
 
-          <View style={styles.mobileVideosSection}>
-            <View style={styles.mobileVideosHeader}>
-              <Text style={styles.mobileVideosTitle}>Recent Videos</Text>
+          <View style={styles.recentProjectsSection}>
+            <View style={styles.recentProjectsHeader}>
+              <Text style={styles.recentProjectsTitle}>Recent Projects</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Projects')}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
             </View>
-                {loading ? (
-                  <ActivityIndicator size="large" color="#0000ff" />
-                ) : error ? (
-                  <ProjectItem
-                      width={170}
-                      title="Error"
-                      type={error}
-                      imageSource={{ uri: 'https://miro.medium.com/v2/resize:fit:1400/1*MXyMqcEJ6Se0SCWcYCKZTQ.jpeg' }}
-                    />
-                ) : (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} >
-                    
-                    {VideoProjects.length > 0 ? (
-                      VideoProjects.map((project, index) => (
-                        <ProjectItem
-                          width={170}
-                          key={index}
-                          title={project.title}
-                          type={project.category}
-                          imageSource={{ uri: project.thumbnail_url }}
-                          date={project.createdAt}
-                          id={project.project_id}
-                        />
-                      ))
-                    ) : (
-                      <Text style={styles.noProjectsText}></Text>
-                    )}
-                      <View style={styles.addButton}>
-                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Video' })}>
-                            <Icon iconName="add" size={50} />
-                        </TouchableOpacity>
-                      </View>
-                    </ScrollView> 
-                )}
+            
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScrollView}>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={colors.theme} />
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity style={styles.addButton} onPress={handleAddNewProject}>
+                    <Feather name="plus" size={40} color={colors.text} />
+                    <Text style={{color: colors.text}}>New Drawing</Text>
+                  </TouchableOpacity>
+
+                  {/* THIS IS THE FIX: We map over recentProjects and render a ProjectItem for each one */}
+                  {recentProjects.map(project => (
+                    // The key is now on the wrapper View
+                    <View key={project.id} style={{ width: 170 }}>
+                      <ProjectItem
+                        project={project}
+                        onPress={handleProjectPress}
+                        // For home screen, long press does nothing.
+                        onLongPress={() => {}} 
+                        // Selection mode is always off on the home screen.
+                        isSelectionMode={false}
+                        isSelected={false}
+                      />
+                    </View>
+                  ))}
+                </>
+              )}
+            </ScrollView>
           </View>
 
-          <View style={styles.mobileVideosSection}>
-            <View style={styles.mobileVideosHeader}>
-              <Text style={styles.mobileVideosTitle}>Recent Shorts</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Projects')}>
-                <Text style={styles.seeAll}>See all</Text>
-              </TouchableOpacity>
-            </View>
-                {loading ? (
-                  <ActivityIndicator size="large" color="#0000ff" />
-                ) : error ? (
-                  <ProjectItem
-                      width={170}
-                      title="Error"
-                      type={error}
-                      imageSource={{ uri: 'https://miro.medium.com/v2/resize:fit:1400/1*MXyMqcEJ6Se0SCWcYCKZTQ.jpeg' }}
-                    />
-                ) : (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} >
-                    
-                    {ShortsProjects.length > 0 ? (
-                      ShortsProjects.map((project, index) => (
-                        <ProjectItem
-                          width={170}
-                          key={index}
-                          title={project.title}
-                          type={project.category}
-                          imageSource={{ uri: project.thumbnail_url }}
-                          date={project.createdAt}
-                          id={project.project_id}
-                        />
-                      ))
-                    ) : (
-                      <Text style={styles.noProjectsText}></Text>
-                    )}
-                      <View style={styles.addButton}>
-                          <TouchableOpacity onPress={() => navigation.navigate('GenerateVideo', { projectCategory: 'Shorts' })}>
-                            <Icon iconName="add" size={50} />
-                        </TouchableOpacity>
-                      </View>
-                    </ScrollView> 
-                )}
-          </View>
-
-          <View style={{ marginBottom: 100 }}>
-          </View>
-        
+          <View style={{ marginBottom: 100 }} />
         </ScrollView>
-      </SafeAreaView>
       
       <BottomNavigation target={'Home'}/>
-    </>
+      </SafeAreaView>
   );
 }
 
 const createStyles = (colors) => StyleSheet.create({
-  addButton: {
-    height: 170,
-    width: 170,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin:5,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 5
-  },
-  projectItemWrapper: {
-    margin: 10,
-  },
-  videoSection: {
-    paddingHorizontal: 10,
-    marginVertical: 20,
-  },
-  videoHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  Title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  videoContainer: {
-    marginRight: 15,
-    width: 270,
-  },
-  video: {
-    width: '100%',
-    height: 120,
-    borderRadius: 10,
-    backgroundColor: colors.lightGray,
-  },
-  videoLabel: {
-    marginTop: 5,
-    fontSize: 14,
-    color: colors.text,
-  },
-
-  mobileVideosSection: {
-    paddingHorizontal: 10,
-    marginVertical: 20,
-  },
-  mobileVideosHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  mobileVideosTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  seeAll: {
-    fontSize: 14,
-    color: colors.theme,
-  },
-  imageContainer: {
-    marginRight: 15,
-    width: 120,
-  },
-  image: {
-    width: '100%',
-    height:200,
-    borderRadius: 10,
-    backgroundColor: colors.lightGray,
-  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -312,9 +161,51 @@ const createStyles = (colors) => StyleSheet.create({
     paddingVertical: 10,
   },
   horizontalScrollView: {
-    marginVertical: 20,
     paddingVertical: 10,
+    paddingLeft: 10,
+  },
+  recentProjectsSection: {
+    marginVertical: 20,
+  },
+  recentProjectsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 15,
+  },
+  recentProjectsTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  seeAll: {
+    fontSize: 14,
+    color: colors.theme,
+    fontWeight: '600',
+  },
+  addButton: {
+    height: 180,
+    width: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    borderRadius: 8,
     backgroundColor: colors.lightBackground,
-    borderRadius: 10,
+  },
+  loadingContainer: {
+    width: 170, 
+    height: 180, 
+    justifyContent: 'center', 
+    alignItems: 'center'
+  },
+  Title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    textAlign: 'center',
   },
 });

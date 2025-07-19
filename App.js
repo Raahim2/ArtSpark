@@ -1,48 +1,42 @@
-import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import NetInfo from '@react-native-community/netinfo';
 import HomeScreen from './Screens/HomeScreen';
-import GenerateVideo from './Screens/GenerateVideo';
-import TemplatesScreen from './Screens/TemplatesScreen';
+import GalleryScreen from './Screens/GalleryScreen';
 import ProjectsScreen from './Screens/ProjectsScreen';
 import SettingsScreen from './Screens/SettingsScreen';
-import VideoDetails from './Screens/VideoDetails';
-import LoginScreen from './Screens/Login';
-import SignUpScreen from './Screens/SignUp';
+import KaleidoscopeCanvasScreen from './Screens/KaleidoscopeCanvas';
+import PixcelArtScreen from './Screens/PixelArtScreen';
+import LogoGeneratorScreen from './Screens/LogoGeneraterScreen';
+import MockUpScreen from './Screens/MockUpScreen';
 import { ColorProvider } from './assets/Variables/colors';
-import NoInternetScreen from './Screens/NoInternet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [isConnected, setIsConnected] = useState(false);  // Set to false to simulate no internet
-
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsConnected(state.isConnected);
-    });
-    return () => unsubscribe();
-  }, []);
-
+  
   return (
-    <ColorProvider>
-      <NavigationContainer>
-        {isConnected ? ( // Check network connection status
-          <Stack.Navigator>
-            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="GenerateVideo" component={GenerateVideo} options={{ headerShown: false }} />
-            <Stack.Screen name="Templates" component={TemplatesScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Projects" component={ProjectsScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="VideoDetails" component={VideoDetails} options={{ headerShown: false }} />
-          </Stack.Navigator>
-        ) : (
-          <NoInternetScreen /> // Show No Internet screen if not connected
-        )}
-      </NavigationContainer>
-    </ColorProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ColorProvider>
+        <NavigationContainer>
+            <Stack.Navigator>
+              <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="KaleidoscopeCanvas" component={KaleidoscopeCanvasScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="PixelArt" component={PixcelArtScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="LogoGenerator" component={LogoGeneratorScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="MockUp" component={MockUpScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="Gallery" component={GalleryScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="Projects" component={ProjectsScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+            </Stack.Navigator>
+        </NavigationContainer>
+      </ColorProvider>
+    </GestureHandlerRootView>
+
   );
 }
+
+// Can add more MockUp images
+// More Fonts
+// More Stickers
+// More Patterns

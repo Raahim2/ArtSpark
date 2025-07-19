@@ -1,12 +1,13 @@
 import React, { useState , useRef, useEffect } from 'react';
 import { View, Text, TextInput, Switch, StyleSheet, ScrollView, TouchableOpacity , Animated } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import BottomNavigation from '../Components/BottomNavigation';
-import UpperNavigation from '../Components/UpperNavigation';
-import SideBar from '../Components/SideBar';
+import BottomNavigation from '../Components/Home/BottomNavigation';
+import UpperNavigation from '../Components/Home/UpperNavigation';
+import SideBar from '../Components/Home/SideBar';
 import { useColorContext } from '../assets/Variables/colors';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const FoldableSection = ({ title, children }) => {
     const [isOpen, setIsOpen] = useState(true);
@@ -33,7 +34,6 @@ const SettingsScreen = () => {
     const styles = createStyles(colors);
     const [selectedColor, setSelectedColor] = useState(colors.theme);
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-    const [videoQuality, setVideoQuality] = useState('1080p');
     const [autoSave, setAutoSave] = useState(true);
 
     useEffect(() => {
@@ -91,96 +91,77 @@ const SettingsScreen = () => {
     };
 
     return (
-        <>
-            <UpperNavigation toggleSidebar={toggleSidebar} title={"Settings"} />
-            <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.lightGray }}>
 
-            <ScrollView style={styles.container}>
-                <FoldableSection title="Customization Options">
-                    <Text style={styles.optionLabel}>App Theme:</Text>
-                    <View style={styles.colorOptionsContainer}>
-                        {colorOptions.map((colorOption, index) => (
-                            <React.Fragment key={colorOption.value}>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.colorOption,
-                                        { backgroundColor: colorOption.value },
-                                        selectedColor === colorOption.value && styles.selectedColorOption,
-                                    ]}
-                                    onPress={() => handleColorOptionPress(colorOption.value)}
-                                />
-                                {(index + 1) % 5 === 0 && <View style={{ flexBasis: '100%', height: 0 }} />} 
-                            </React.Fragment>
-                        ))}
-                    </View>
-                </FoldableSection>
+                <UpperNavigation toggleSidebar={toggleSidebar} title={"Settings"} />
+        <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} animation={sidebarAnimation} />
 
-                <FoldableSection title="Video Generation Settings">
-                    <View style={styles.settingItem}>
-                        <Text style={styles.optionLabel}>Video Quality:</Text>
-                        <Picker
-                            selectedValue={videoQuality}
-                            style={styles.picker}
-                            onValueChange={(value) => setVideoQuality(value)}>
-                            <Picker.Item label="4K (2160p)" value="2160p" />
-                            <Picker.Item label="1080p" value="1080p" />
-                            <Picker.Item label="720p" value="720p" />
-                        </Picker>
-                    </View>
-                    <View style={styles.settingItem}>
-                        <Text style={styles.optionLabel}>Auto-Save Projects</Text>
-                        <Switch 
-                            value={autoSave}
-                            onValueChange={setAutoSave}
-                            trackColor={{ false: colors.light, true: colors.theme }}
-                        />
-                    </View>
-                </FoldableSection>
+        <ScrollView style={styles.container}>
+            <FoldableSection title="Customization Options">
+                <Text style={styles.optionLabel}>App Theme:</Text>
+                <View style={styles.colorOptionsContainer}>
+                    {colorOptions.map((colorOption, index) => (
+                        <React.Fragment key={colorOption.value}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.colorOption,
+                                    { backgroundColor: colorOption.value },
+                                    selectedColor === colorOption.value && styles.selectedColorOption,
+                                ]}
+                                onPress={() => handleColorOptionPress(colorOption.value)}
+                            />
+                            {(index + 1) % 5 === 0 && <View style={{ flexBasis: '100%', height: 0 }} />} 
+                        </React.Fragment>
+                    ))}
+                </View>
+            </FoldableSection>
 
-                <FoldableSection title="Notification Settings">
-                    <View style={styles.settingItem}>
-                        <Text style={styles.optionLabel}>Enable Notifications</Text>
-                        <Switch 
-                            value={notificationsEnabled}
-                            onValueChange={setNotificationsEnabled}
-                            trackColor={{ false: colors.light, true: colors.theme }}
-                        />
-                    </View>
-                </FoldableSection>
+       
 
-                <FoldableSection title="Help & Support">
-                    <TouchableOpacity style={styles.helpItem}>
-                        <Text style={styles.helpText}>FAQ</Text>
-                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.helpItem}>
-                        <Text style={styles.helpText}>Contact Support</Text>
-                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.helpItem}>
-                        <Text style={styles.helpText}>Tutorial Videos</Text>
-                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
-                    </TouchableOpacity>
-                </FoldableSection>
+            <FoldableSection title="Notification Settings">
+                <View style={styles.settingItem}>
+                    <Text style={styles.optionLabel}>Enable Notifications</Text>
+                    <Switch 
+                        value={notificationsEnabled}
+                        onValueChange={setNotificationsEnabled}
+                        trackColor={{ false: colors.light, true: colors.theme }}
+                    />
+                </View>
+            </FoldableSection>
 
-                <FoldableSection title="Account Settings">
-                    <TouchableOpacity style={styles.helpItem}>
-                        <Text style={styles.helpText}>Change Password</Text>
-                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.helpItem}>
-                        <Text style={styles.helpText}>Privacy Settings</Text>
-                        <Ionicons name="chevron-forward" size={24} color={colors.gray} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.helpItem, styles.dangerItem]}>
-                        <Text style={[styles.helpText, styles.dangerText]}>Delete Account</Text>
-                        <Ionicons name="chevron-forward" size={24} color={colors.danger} />
-                    </TouchableOpacity>
-                </FoldableSection>
-            </ScrollView>
+            <FoldableSection title="Help & Support">
+                <TouchableOpacity style={styles.helpItem}>
+                    <Text style={styles.helpText}>FAQ</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.helpItem}>
+                    <Text style={styles.helpText}>Contact Support</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.helpItem}>
+                    <Text style={styles.helpText}>Tutorial Videos</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                </TouchableOpacity>
+            </FoldableSection>
 
-            <BottomNavigation target="Settings"/>
-        </>
+            <FoldableSection title="Account Settings">
+                <TouchableOpacity style={styles.helpItem}>
+                    <Text style={styles.helpText}>Change Password</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.helpItem}>
+                    <Text style={styles.helpText}>Privacy Settings</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.gray} />
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.helpItem, styles.dangerItem]}>
+                    <Text style={[styles.helpText, styles.dangerText]}>Delete Account</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.danger} />
+                </TouchableOpacity>
+            </FoldableSection>
+        </ScrollView>
+
+        <BottomNavigation target="Settings"/>
+        </SafeAreaView>
     );
 };
 
