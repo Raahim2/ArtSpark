@@ -41,7 +41,7 @@ Easily wrap your designs on popular mockups:
 
 ## 📱 Download The App
 
-- [📲 Download APK (Direct)((https://raahim-portfolio.vercel.app/))
+- [📲 Download APK (Direct)](https://github.com/Raahim2/ArtSpark/releases/download/ArtSpark/ArtSpark.apk)
 - [📦 Alternate Link (Expo)](https://expo.dev/artifacts/eas/xyzabc123.apk)
 
 ---
